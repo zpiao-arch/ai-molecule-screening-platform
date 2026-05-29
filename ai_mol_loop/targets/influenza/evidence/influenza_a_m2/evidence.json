@@ -1,0 +1,258 @@
+{
+  "schema_version": "0.1",
+  "generated_at": "2026-05-19T22:12:33+0800",
+  "target_id": "influenza_a_m2",
+  "target_display_name": "Influenza A M2 proton channel",
+  "recommendation": "historical_control_not_primary",
+  "known_drugs": [
+    "amantadine",
+    "rimantadine"
+  ],
+  "official_sources": [
+    {
+      "id": "cdc_antivirals_summary",
+      "title": "CDC Influenza Antiviral Medications: Summary for Clinicians",
+      "url": "https://www.cdc.gov/flu/hcp/antivirals/summary-clinicians.html",
+      "evidence_role": "Confirms currently used influenza antivirals and drug classes."
+    },
+    {
+      "id": "cdc_antiviral_resistance",
+      "title": "CDC Antiviral Drug Resistance among Influenza Viruses",
+      "url": "https://www.cdc.gov/flu/treatment/antiviralresistance.html",
+      "evidence_role": "Supports M2 adamantane resistance caveat and resistance-aware interpretation."
+    },
+    {
+      "id": "who_nai_susceptibility",
+      "title": "WHO Antiviral susceptibility of influenza viruses: neuraminidase inhibitor methods",
+      "url": "https://www.who.int/teams/global-influenza-programme/laboratory-network/quality-assurance/antiviral-susceptibility-influenza/neuraminidase-inhibitor",
+      "evidence_role": "Supports neuraminidase inhibition assay as a validation route."
+    },
+    {
+      "id": "fda_influenza_antivirals",
+      "title": "FDA Influenza Antiviral Drugs and Related Information",
+      "url": "https://www.fda.gov/drugs/information-drug-class/influenza-flu-antiviral-drugs-and-related-information",
+      "evidence_role": "Regulatory source for influenza antiviral products and labels."
+    }
+  ],
+  "open_data_sources": [
+    {
+      "id": "rcsb_pdb",
+      "title": "RCSB Protein Data Bank",
+      "url": "https://www.rcsb.org/",
+      "api": "https://data.rcsb.org/rest/v1/core/entry/{pdb_id}",
+      "evidence_role": "Protein-ligand structure metadata and structure provenance."
+    },
+    {
+      "id": "pubmed",
+      "title": "PubMed / NCBI E-utilities",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/",
+      "esearch": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi",
+      "esummary": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi",
+      "evidence_role": "Literature metadata for target, drug, structure, and assay evidence."
+    },
+    {
+      "id": "chembl",
+      "title": "ChEMBL",
+      "url": "https://www.ebi.ac.uk/chembl/",
+      "api": "https://www.ebi.ac.uk/chembl/api/data/",
+      "evidence_role": "Known bioactivity and target-ligand data entry point."
+    },
+    {
+      "id": "bindingdb",
+      "title": "BindingDB",
+      "url": "https://www.bindingdb.org/",
+      "evidence_role": "Curated binding and inhibition data entry point."
+    },
+    {
+      "id": "pubchem",
+      "title": "PubChem",
+      "url": "https://pubchem.ncbi.nlm.nih.gov/",
+      "evidence_role": "Compound identifiers, structures, and bioassay entry point."
+    },
+    {
+      "id": "uniprot",
+      "title": "UniProt",
+      "url": "https://www.uniprot.org/",
+      "evidence_role": "Protein sequence, annotation, and accession lookup entry point."
+    }
+  ],
+  "pdb_entries": [
+    {
+      "pdb_id": "2KQT",
+      "fetch_status": "ok",
+      "title": "Solid-state NMR structure of the M2 transmembrane peptide of the influenza A virus in DMPC lipid bilayers bound to deuterated amantadine",
+      "experimental_method": "SOLID-STATE NMR",
+      "resolution": "",
+      "release_date": "2010-02-09T00:00:00.000+00:00",
+      "primary_citation_title": "Structure of the amantadine binding site of influenza M2 proton channels in lipid bilayers",
+      "primary_citation_year": 2010,
+      "primary_citation_pubmed_id": 20130653,
+      "rcsb_url": "https://www.rcsb.org/structure/2KQT"
+    }
+  ],
+  "pubmed_queries": [
+    "\"influenza A M2\" amantadine rimantadine resistance",
+    "\"influenza A M2 proton channel\" amantadine structure",
+    "\"adamantane resistance\" influenza A M2"
+  ],
+  "pubmed_articles": [
+    {
+      "pmid": "24011996",
+      "title": "Structural and energetic analysis of drug inhibition of the influenza A M2 proton channel.",
+      "journal": "Trends in pharmacological sciences",
+      "pubdate": "2013 Oct",
+      "first_author": "Gu RX",
+      "doi_or_elocation": "doi: 10.1016/j.tips.2013.08.003",
+      "pubmed_url": "https://pubmed.ncbi.nlm.nih.gov/24011996/",
+      "query": "\"influenza A M2\" amantadine rimantadine resistance"
+    },
+    {
+      "pmid": "37377066",
+      "title": "A Study of the Activity of Adamantyl Amines against Mutant Influenza A M2 Channels Identified a Polycyclic Cage Amine Triple Blocker, Explored by Molecular Dynamics Simulations and Solid-State NMR.",
+      "journal": "ChemMedChem",
+      "pubdate": "2023 Aug 15",
+      "first_author": "Stampolaki Μ",
+      "doi_or_elocation": "doi: 10.1002/cmdc.202300182",
+      "pubmed_url": "https://pubmed.ncbi.nlm.nih.gov/37377066/",
+      "query": "\"influenza A M2 proton channel\" amantadine structure"
+    },
+    {
+      "pmid": "25387967",
+      "title": "Drug inhibition and proton conduction mechanisms of the influenza a M2 proton channel.",
+      "journal": "Advances in experimental medicine and biology",
+      "pubdate": "2015",
+      "first_author": "Gu R",
+      "doi_or_elocation": "doi: 10.1007/978-94-017-9245-5_13",
+      "pubmed_url": "https://pubmed.ncbi.nlm.nih.gov/25387967/",
+      "query": "\"influenza A M2\" amantadine rimantadine resistance"
+    },
+    {
+      "pmid": "16493107",
+      "title": "Adamantane resistance in influenza A.",
+      "journal": "JAMA",
+      "pubdate": "2006 Feb 22",
+      "first_author": "Weinstock DM",
+      "doi_or_elocation": "",
+      "pubmed_url": "https://pubmed.ncbi.nlm.nih.gov/16493107/",
+      "query": "\"adamantane resistance\" influenza A M2"
+    },
+    {
+      "pmid": "31894969",
+      "title": "X-ray Crystal Structures of the Influenza M2 Proton Channel Drug-Resistant V27A Mutant Bound to a Spiro-Adamantyl Amine Inhibitor Reveal the Mechanism of Adamantane Resistance.",
+      "journal": "Biochemistry",
+      "pubdate": "2020 Feb 4",
+      "first_author": "Thomaston JL",
+      "doi_or_elocation": "doi: 10.1021/acs.biochem.9b00971",
+      "pubmed_url": "https://pubmed.ncbi.nlm.nih.gov/31894969/",
+      "query": "\"adamantane resistance\" influenza A M2"
+    },
+    {
+      "pmid": "18258311",
+      "title": "Adamantane resistance in circulating human influenza A viruses from Alberta, Canada (1970-2007).",
+      "journal": "Antiviral research",
+      "pubdate": "2008 Aug",
+      "first_author": "Pabbaraju K",
+      "doi_or_elocation": "doi: 10.1016/j.antiviral.2007.12.006",
+      "pubmed_url": "https://pubmed.ncbi.nlm.nih.gov/18258311/",
+      "query": "\"adamantane resistance\" influenza A M2"
+    }
+  ],
+  "open_data_queries": [
+    "ChEMBL target search: influenza A M2 proton channel",
+    "PubChem compound controls: amantadine, rimantadine"
+  ],
+  "network_errors": [],
+  "known_drug_rows": [
+    {
+      "drug": "amantadine",
+      "target_id": "influenza_a_m2",
+      "mechanism": "M2 proton channel blocker",
+      "status_for_workflow": "historical_control_not_recommended",
+      "notes": "Widespread resistance; CDC does not recommend adamantanes for currently circulating influenza A viruses",
+      "source_url": "https://www.cdc.gov/flu/treatment/antiviralresistance.html"
+    },
+    {
+      "drug": "rimantadine",
+      "target_id": "influenza_a_m2",
+      "mechanism": "M2 proton channel blocker",
+      "status_for_workflow": "historical_control_not_recommended",
+      "notes": "Widespread resistance; historical comparator only",
+      "source_url": "https://www.cdc.gov/flu/treatment/antiviralresistance.html"
+    }
+  ],
+  "structure_rows": [
+    {
+      "pdb_id": "2KQT",
+      "target_id": "influenza_a_m2",
+      "ligand": "amantadine",
+      "use": "historical_control_structure",
+      "description": "Influenza A M2 transmembrane peptide bound to amantadine",
+      "source_url": "https://www.rcsb.org/structure/2KQT"
+    }
+  ],
+  "closed_loop_assets": {
+    "primary_structure": {
+      "pdb_id": "2KQT",
+      "ligand": "amantadine",
+      "use": "historical_control_structure",
+      "description": "Influenza A M2 transmembrane peptide bound to amantadine",
+      "source_url": "https://www.rcsb.org/structure/2KQT",
+      "metadata_status": "ok",
+      "resolution": "",
+      "rcsb_url": "https://www.rcsb.org/structure/2KQT"
+    },
+    "positive_controls": [],
+    "reference_controls": [],
+    "historical_controls": [
+      "amantadine",
+      "rimantadine"
+    ],
+    "binding_site": {
+      "source": "channel_structure",
+      "description": "Membrane channel binding site; not a straightforward soluble enzyme pocket.",
+      "reference_ligand": "amantadine",
+      "key_residues": [
+        "M2 channel pore residues; verify strain and resistance mutation state"
+      ],
+      "box_strategy": "Requires membrane/channel-aware preparation; not recommended for first docking MVP."
+    },
+    "computational_validation": [
+      "Use only as historical control or method stress test.",
+      "Do not rank alongside NA without explicit caveats."
+    ],
+    "experimental_validation": [
+      "Channel inhibition and resistance-specific viral assays would be needed."
+    ],
+    "assay_path": "Channel inhibition and resistance-specific viral assays would be needed."
+  },
+  "evidence_quality": {
+    "score": 0.5686,
+    "readiness": "secondary_or_needs_manual_review",
+    "components": {
+      "clinical_controls": 0.0,
+      "structure_metadata": 0.5,
+      "literature_metadata": 1.0,
+      "assay_path": 1.0,
+      "open_data_entry_points": 0.6667,
+      "catalog_prior": 0.5384
+    },
+    "counts": {
+      "pdb_entries": 1,
+      "ok_pdb_entries": 1,
+      "queued_pdb_entries": 0,
+      "pubmed_articles": 6,
+      "positive_controls": 0,
+      "reference_controls": 0,
+      "historical_controls": 2,
+      "open_data_queries": 2
+    },
+    "interpretation": "Evidence score ranks source readiness for the computational closed loop; it is not a measured efficacy score."
+  },
+  "source_traceability": {
+    "target_catalog_id": "influenza_a_m2",
+    "target_catalog_recommendation": "historical_control_not_primary",
+    "known_drugs_file": "./ai_mol_loop/targets/influenza/known_drugs.csv",
+    "pdb_structures_file": "./ai_mol_loop/targets/influenza/pdb_structures.csv",
+    "evidence_sources_file": "./ai_mol_loop/targets/influenza/evidence_sources.json"
+  }
+}

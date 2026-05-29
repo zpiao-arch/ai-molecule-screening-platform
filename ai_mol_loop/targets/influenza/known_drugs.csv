@@ -1,0 +1,14 @@
+drug,target_id,mechanism,status_for_workflow,notes,source_url
+oseltamivir,influenza_a_h1n1_na,neuraminidase inhibitor,positive_control,Clinically used influenza antiviral; use as NA positive control in A/H1N1 workflow,https://www.cdc.gov/flu/hcp/antivirals/summary-clinicians.html
+zanamivir,influenza_a_h1n1_na,neuraminidase inhibitor,positive_control,Clinically used NA inhibitor; useful as polar active-site reference,https://www.cdc.gov/flu/hcp/antivirals/summary-clinicians.html
+peramivir,influenza_a_h1n1_na,neuraminidase inhibitor,positive_control,Clinically used IV NA inhibitor; useful as reference control,https://www.cdc.gov/flu/hcp/antivirals/summary-clinicians.html
+laninamivir,influenza_a_h1n1_na,neuraminidase inhibitor,reference_control,Used in some regions and useful as structural NA inhibitor reference,https://pdb101.rcsb.org/motm/113
+oseltamivir,influenza_b_na,neuraminidase inhibitor,positive_control,NA inhibitor active context should be evaluated for B-flu separately,https://www.cdc.gov/flu/hcp/antivirals/summary-clinicians.html
+zanamivir,influenza_b_na,neuraminidase inhibitor,positive_control,NA inhibitor control for B-flu workflow,https://www.cdc.gov/flu/hcp/antivirals/summary-clinicians.html
+peramivir,influenza_b_na,neuraminidase inhibitor,positive_control,NA inhibitor control for B-flu workflow,https://www.cdc.gov/flu/hcp/antivirals/summary-clinicians.html
+baloxavir marboxil,influenza_a_pa_endonuclease,PA cap-dependent endonuclease inhibitor,positive_control,Approved prodrug; active form is baloxavir acid,https://www.cdc.gov/flu/hcp/antivirals/summary-clinicians.html
+baloxavir acid,influenza_a_pa_endonuclease,PA cap-dependent endonuclease inhibitor,positive_control,Use active metabolite as structural/docking control where available,https://www.rcsb.org/structure/6FS6
+baloxavir marboxil,influenza_b_pa_endonuclease,PA cap-dependent endonuclease inhibitor,positive_control,Approved prodrug; B-flu workflow should be benchmarked separately,https://www.cdc.gov/flu/hcp/antivirals/summary-clinicians.html
+baloxavir acid,influenza_b_pa_endonuclease,PA cap-dependent endonuclease inhibitor,positive_control,Use active metabolite as structural/docking control where available,https://www.rcsb.org/structure/6FS8
+amantadine,influenza_a_m2,M2 proton channel blocker,historical_control_not_recommended,Widespread resistance; CDC does not recommend adamantanes for currently circulating influenza A viruses,https://www.cdc.gov/flu/treatment/antiviralresistance.html
+rimantadine,influenza_a_m2,M2 proton channel blocker,historical_control_not_recommended,Widespread resistance; historical comparator only,https://www.cdc.gov/flu/treatment/antiviralresistance.html

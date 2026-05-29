@@ -1,0 +1,10 @@
+rdkit>=2023.9
+numpy>=1.24
+pandas>=2.0
+requests>=2.31
+playwright>=1.44
+openbabel-wheel>=3.1
+meeko>=0.5
+posebusters>=0.3
+gemmi>=0.6
+prody>=2.4

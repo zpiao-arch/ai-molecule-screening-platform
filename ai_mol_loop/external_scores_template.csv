@@ -1,0 +1,3 @@
+id,smiles,docking_score,pose_pass
+r01_00001,c1ccccc1C(=O)O,-7.8,true
+r01_00002,CCOC(=O)c1ccccc1,-6.4,false

@@ -1,0 +1,350 @@
+{
+  "schema_version": "0.1",
+  "generated_at": "2026-05-19T22:12:33+0800",
+  "target_id": "influenza_a_h1n1_na",
+  "target_display_name": "Influenza A(H1N1) neuraminidase",
+  "recommendation": "primary",
+  "known_drugs": [
+    "oseltamivir",
+    "zanamivir",
+    "peramivir",
+    "laninamivir"
+  ],
+  "official_sources": [
+    {
+      "id": "cdc_antivirals_summary",
+      "title": "CDC Influenza Antiviral Medications: Summary for Clinicians",
+      "url": "https://www.cdc.gov/flu/hcp/antivirals/summary-clinicians.html",
+      "evidence_role": "Confirms currently used influenza antivirals and drug classes."
+    },
+    {
+      "id": "cdc_antiviral_resistance",
+      "title": "CDC Antiviral Drug Resistance among Influenza Viruses",
+      "url": "https://www.cdc.gov/flu/treatment/antiviralresistance.html",
+      "evidence_role": "Supports M2 adamantane resistance caveat and resistance-aware interpretation."
+    },
+    {
+      "id": "who_nai_susceptibility",
+      "title": "WHO Antiviral susceptibility of influenza viruses: neuraminidase inhibitor methods",
+      "url": "https://www.who.int/teams/global-influenza-programme/laboratory-network/quality-assurance/antiviral-susceptibility-influenza/neuraminidase-inhibitor",
+      "evidence_role": "Supports neuraminidase inhibition assay as a validation route."
+    },
+    {
+      "id": "fda_influenza_antivirals",
+      "title": "FDA Influenza Antiviral Drugs and Related Information",
+      "url": "https://www.fda.gov/drugs/information-drug-class/influenza-flu-antiviral-drugs-and-related-information",
+      "evidence_role": "Regulatory source for influenza antiviral products and labels."
+    }
+  ],
+  "open_data_sources": [
+    {
+      "id": "rcsb_pdb",
+      "title": "RCSB Protein Data Bank",
+      "url": "https://www.rcsb.org/",
+      "api": "https://data.rcsb.org/rest/v1/core/entry/{pdb_id}",
+      "evidence_role": "Protein-ligand structure metadata and structure provenance."
+    },
+    {
+      "id": "pubmed",
+      "title": "PubMed / NCBI E-utilities",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/",
+      "esearch": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi",
+      "esummary": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi",
+      "evidence_role": "Literature metadata for target, drug, structure, and assay evidence."
+    },
+    {
+      "id": "chembl",
+      "title": "ChEMBL",
+      "url": "https://www.ebi.ac.uk/chembl/",
+      "api": "https://www.ebi.ac.uk/chembl/api/data/",
+      "evidence_role": "Known bioactivity and target-ligand data entry point."
+    },
+    {
+      "id": "bindingdb",
+      "title": "BindingDB",
+      "url": "https://www.bindingdb.org/",
+      "evidence_role": "Curated binding and inhibition data entry point."
+    },
+    {
+      "id": "pubchem",
+      "title": "PubChem",
+      "url": "https://pubchem.ncbi.nlm.nih.gov/",
+      "evidence_role": "Compound identifiers, structures, and bioassay entry point."
+    },
+    {
+      "id": "uniprot",
+      "title": "UniProt",
+      "url": "https://www.uniprot.org/",
+      "evidence_role": "Protein sequence, annotation, and accession lookup entry point."
+    }
+  ],
+  "pdb_entries": [
+    {
+      "pdb_id": "3TI6",
+      "fetch_status": "ok",
+      "title": "Crystal structure of 2009 pandemic H1N1 neuraminidase complexed with oseltamivir",
+      "experimental_method": "X-RAY DIFFRACTION",
+      "resolution": 1.69,
+      "release_date": "2011-11-23T00:00:00.000+00:00",
+      "primary_citation_title": "Structural and functional analysis of laninamivir and its octanoate prodrug reveals group specific mechanisms for influenza NA inhibition",
+      "primary_citation_year": 2011,
+      "primary_citation_pubmed_id": 22028647,
+      "rcsb_url": "https://www.rcsb.org/structure/3TI6"
+    },
+    {
+      "pdb_id": "3TI5",
+      "fetch_status": "ok",
+      "title": "Crystal structure of 2009 pandemic H1N1 neuraminidase complexed with Zanamivir",
+      "experimental_method": "X-RAY DIFFRACTION",
+      "resolution": 1.9,
+      "release_date": "2011-11-16T00:00:00.000+00:00",
+      "primary_citation_title": "Structural and functional analysis of laninamivir and its octanoate prodrug reveals group specific mechanisms for influenza NA inhibition",
+      "primary_citation_year": 2011,
+      "primary_citation_pubmed_id": 22028647,
+      "rcsb_url": "https://www.rcsb.org/structure/3TI5"
+    },
+    {
+      "pdb_id": "3TI3",
+      "fetch_status": "ok",
+      "title": "Crystal structure of 2009 pandemic H1N1 neuraminidase complexed with laninamivir",
+      "experimental_method": "X-RAY DIFFRACTION",
+      "resolution": 1.8,
+      "release_date": "2011-11-16T00:00:00.000+00:00",
+      "primary_citation_title": "Structural and functional analysis of laninamivir and its octanoate prodrug reveals group specific mechanisms for influenza NA inhibition",
+      "primary_citation_year": 2011,
+      "primary_citation_pubmed_id": 22028647,
+      "rcsb_url": "https://www.rcsb.org/structure/3TI3"
+    }
+  ],
+  "pubmed_queries": [
+    "\"influenza A H1N1\" neuraminidase oseltamivir crystal structure",
+    "\"2009 pandemic H1N1\" neuraminidase oseltamivir zanamivir laninamivir",
+    "\"influenza neuraminidase\" inhibitor assay oseltamivir zanamivir peramivir"
+  ],
+  "pubmed_articles": [
+    {
+      "pmid": "23097226",
+      "title": "Outside-binding site mutations modify the active site's shapes in neuraminidase from influenza A H1N1.",
+      "journal": "Biopolymers",
+      "pubdate": "2013 Jan",
+      "first_author": "Tolentino-Lopez L",
+      "doi_or_elocation": "doi: 10.1002/bip.22130",
+      "pubmed_url": "https://pubmed.ncbi.nlm.nih.gov/23097226/",
+      "query": "\"influenza A H1N1\" neuraminidase oseltamivir crystal structure"
+    },
+    {
+      "pmid": "19917319",
+      "title": "Host cell selection of influenza neuraminidase variants: implications for drug resistance monitoring in A(H1N1) viruses.",
+      "journal": "Antiviral research",
+      "pubdate": "2010 Feb",
+      "first_author": "Okomo-Adhiambo M",
+      "doi_or_elocation": "doi: 10.1016/j.antiviral.2009.11.005",
+      "pubmed_url": "https://pubmed.ncbi.nlm.nih.gov/19917319/",
+      "query": "\"influenza A H1N1\" neuraminidase oseltamivir crystal structure"
+    },
+    {
+      "pmid": "25605596",
+      "title": "Targeting a cluster of arginine residues of neuraminidase to avoid oseltamivir resistance in influenza A (H1N1): a theoretical study.",
+      "journal": "Journal of molecular modeling",
+      "pubdate": "2015 Jan",
+      "first_author": "Gema LR",
+      "doi_or_elocation": "doi: 10.1007/s00894-014-2525-9",
+      "pubmed_url": "https://pubmed.ncbi.nlm.nih.gov/25605596/",
+      "query": "\"influenza A H1N1\" neuraminidase oseltamivir crystal structure"
+    },
+    {
+      "pmid": "21592407",
+      "title": "Systematic review of influenza resistance to the neuraminidase inhibitors.",
+      "journal": "BMC infectious diseases",
+      "pubdate": "2011 May 19",
+      "first_author": "Thorlund K",
+      "doi_or_elocation": "doi: 10.1186/1471-2334-11-134",
+      "pubmed_url": "https://pubmed.ncbi.nlm.nih.gov/21592407/",
+      "query": "\"2009 pandemic H1N1\" neuraminidase oseltamivir zanamivir laninamivir"
+    },
+    {
+      "pmid": "25301400",
+      "title": "Characterization of human Influenza Viruses in Lebanon during 2010-2011 and 2011-2012 post-pandemic seasons.",
+      "journal": "Intervirology",
+      "pubdate": "2014",
+      "first_author": "Zaraket H",
+      "doi_or_elocation": "doi: 10.1159/000365758",
+      "pubmed_url": "https://pubmed.ncbi.nlm.nih.gov/25301400/",
+      "query": "\"2009 pandemic H1N1\" neuraminidase oseltamivir zanamivir laninamivir"
+    },
+    {
+      "pmid": "35304163",
+      "title": "Characterization of influenza B viruses with reduced susceptibility to influenza neuraminidase inhibitors.",
+      "journal": "Antiviral research",
+      "pubdate": "2022 Apr",
+      "first_author": "Brown SK",
+      "doi_or_elocation": "doi: 10.1016/j.antiviral.2022.105280",
+      "pubmed_url": "https://pubmed.ncbi.nlm.nih.gov/35304163/",
+      "query": "\"influenza neuraminidase\" inhibitor assay oseltamivir zanamivir peramivir"
+    },
+    {
+      "pmid": "23575174",
+      "title": "Neuraminidase inhibitor susceptibility surveillance of influenza viruses circulating worldwide during the 2011 Southern Hemisphere season.",
+      "journal": "Influenza and other respiratory viruses",
+      "pubdate": "2013 Sep",
+      "first_author": "Okomo-Adhiambo M",
+      "doi_or_elocation": "doi: 10.1111/irv.12113",
+      "pubmed_url": "https://pubmed.ncbi.nlm.nih.gov/23575174/",
+      "query": "\"influenza neuraminidase\" inhibitor assay oseltamivir zanamivir peramivir"
+    },
+    {
+      "pmid": "26808479",
+      "title": "Standardizing the influenza neuraminidase inhibition assay among United States public health laboratories conducting virological surveillance.",
+      "journal": "Antiviral research",
+      "pubdate": "2016 Apr",
+      "first_author": "Okomo-Adhiambo M",
+      "doi_or_elocation": "doi: 10.1016/j.antiviral.2016.01.009",
+      "pubmed_url": "https://pubmed.ncbi.nlm.nih.gov/26808479/",
+      "query": "\"influenza neuraminidase\" inhibitor assay oseltamivir zanamivir peramivir"
+    }
+  ],
+  "open_data_queries": [
+    "ChEMBL target search: influenza A neuraminidase",
+    "BindingDB query: influenza neuraminidase oseltamivir",
+    "PubChem compound controls: oseltamivir, zanamivir, peramivir, laninamivir"
+  ],
+  "network_errors": [],
+  "known_drug_rows": [
+    {
+      "drug": "oseltamivir",
+      "target_id": "influenza_a_h1n1_na",
+      "mechanism": "neuraminidase inhibitor",
+      "status_for_workflow": "positive_control",
+      "notes": "Clinically used influenza antiviral; use as NA positive control in A/H1N1 workflow",
+      "source_url": "https://www.cdc.gov/flu/hcp/antivirals/summary-clinicians.html"
+    },
+    {
+      "drug": "zanamivir",
+      "target_id": "influenza_a_h1n1_na",
+      "mechanism": "neuraminidase inhibitor",
+      "status_for_workflow": "positive_control",
+      "notes": "Clinically used NA inhibitor; useful as polar active-site reference",
+      "source_url": "https://www.cdc.gov/flu/hcp/antivirals/summary-clinicians.html"
+    },
+    {
+      "drug": "peramivir",
+      "target_id": "influenza_a_h1n1_na",
+      "mechanism": "neuraminidase inhibitor",
+      "status_for_workflow": "positive_control",
+      "notes": "Clinically used IV NA inhibitor; useful as reference control",
+      "source_url": "https://www.cdc.gov/flu/hcp/antivirals/summary-clinicians.html"
+    },
+    {
+      "drug": "laninamivir",
+      "target_id": "influenza_a_h1n1_na",
+      "mechanism": "neuraminidase inhibitor",
+      "status_for_workflow": "reference_control",
+      "notes": "Used in some regions and useful as structural NA inhibitor reference",
+      "source_url": "https://pdb101.rcsb.org/motm/113"
+    }
+  ],
+  "structure_rows": [
+    {
+      "pdb_id": "3TI6",
+      "target_id": "influenza_a_h1n1_na",
+      "ligand": "oseltamivir",
+      "use": "recommended_demo_structure",
+      "description": "2009 pandemic H1N1 neuraminidase complexed with oseltamivir",
+      "source_url": "https://www.rcsb.org/structure/3TI6"
+    },
+    {
+      "pdb_id": "3TI5",
+      "target_id": "influenza_a_h1n1_na",
+      "ligand": "zanamivir",
+      "use": "reference_control",
+      "description": "2009 pandemic H1N1 neuraminidase complexed with zanamivir",
+      "source_url": "https://www.rcsb.org/"
+    },
+    {
+      "pdb_id": "3TI3",
+      "target_id": "influenza_a_h1n1_na",
+      "ligand": "laninamivir",
+      "use": "reference_control",
+      "description": "2009 pandemic H1N1 neuraminidase complexed with laninamivir",
+      "source_url": "https://www.rcsb.org/"
+    }
+  ],
+  "closed_loop_assets": {
+    "primary_structure": {
+      "pdb_id": "3TI6",
+      "ligand": "oseltamivir",
+      "use": "recommended_demo_structure",
+      "description": "2009 pandemic H1N1 neuraminidase complexed with oseltamivir",
+      "source_url": "https://www.rcsb.org/structure/3TI6",
+      "metadata_status": "ok",
+      "resolution": 1.69,
+      "rcsb_url": "https://www.rcsb.org/structure/3TI6"
+    },
+    "positive_controls": [
+      "oseltamivir",
+      "zanamivir",
+      "peramivir"
+    ],
+    "reference_controls": [
+      "laninamivir"
+    ],
+    "historical_controls": [],
+    "binding_site": {
+      "source": "co_crystal",
+      "description": "Conserved neuraminidase active site around the co-crystallized inhibitor, with charged and polar contacts that recognize sialic-acid-like ligands.",
+      "reference_ligand": "oseltamivir",
+      "key_residues": [
+        "Arg118",
+        "Asp151",
+        "Arg152",
+        "Arg224",
+        "Glu276",
+        "Arg292",
+        "Arg371",
+        "Tyr406"
+      ],
+      "box_strategy": "Use co-crystallized oseltamivir centroid from 3TI6 or a prepared receptor-ligand complex."
+    },
+    "computational_validation": [
+      "Use oseltamivir/zanamivir/peramivir as positive controls.",
+      "Dock generated molecules into 3TI6-derived NA active site.",
+      "Run PoseBusters on top docked poses.",
+      "Compare generated molecules against controls by rank, pose pass rate, and scaffold diversity."
+    ],
+    "experimental_validation": [
+      "Neuraminidase inhibition assay is the most direct biochemical validation route.",
+      "Cell-based influenza replication assays are downstream confirmation, not first-line CLI validation."
+    ],
+    "assay_path": "Neuraminidase inhibition assay is the most direct biochemical validation route. | Cell-based influenza replication assays are downstream confirmation, not first-line CLI validation."
+  },
+  "evidence_quality": {
+    "score": 0.9967,
+    "readiness": "ready_for_mvp_closed_loop",
+    "components": {
+      "clinical_controls": 1.0,
+      "structure_metadata": 1.0,
+      "literature_metadata": 1.0,
+      "assay_path": 1.0,
+      "open_data_entry_points": 1.0,
+      "catalog_prior": 0.9334
+    },
+    "counts": {
+      "pdb_entries": 3,
+      "ok_pdb_entries": 3,
+      "queued_pdb_entries": 0,
+      "pubmed_articles": 8,
+      "positive_controls": 3,
+      "reference_controls": 1,
+      "historical_controls": 0,
+      "open_data_queries": 3
+    },
+    "interpretation": "Evidence score ranks source readiness for the computational closed loop; it is not a measured efficacy score."
+  },
+  "source_traceability": {
+    "target_catalog_id": "influenza_a_h1n1_na",
+    "target_catalog_recommendation": "primary",
+    "known_drugs_file": "./ai_mol_loop/targets/influenza/known_drugs.csv",
+    "pdb_structures_file": "./ai_mol_loop/targets/influenza/pdb_structures.csv",
+    "evidence_sources_file": "./ai_mol_loop/targets/influenza/evidence_sources.json"
+  }
+}

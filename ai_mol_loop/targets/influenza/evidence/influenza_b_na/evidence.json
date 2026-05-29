@@ -1,0 +1,283 @@
+{
+  "schema_version": "0.1",
+  "generated_at": "2026-05-19T22:12:33+0800",
+  "target_id": "influenza_b_na",
+  "target_display_name": "Influenza B neuraminidase",
+  "recommendation": "primary_for_b_flu",
+  "known_drugs": [
+    "oseltamivir",
+    "zanamivir",
+    "peramivir"
+  ],
+  "official_sources": [
+    {
+      "id": "cdc_antivirals_summary",
+      "title": "CDC Influenza Antiviral Medications: Summary for Clinicians",
+      "url": "https://www.cdc.gov/flu/hcp/antivirals/summary-clinicians.html",
+      "evidence_role": "Confirms currently used influenza antivirals and drug classes."
+    },
+    {
+      "id": "cdc_antiviral_resistance",
+      "title": "CDC Antiviral Drug Resistance among Influenza Viruses",
+      "url": "https://www.cdc.gov/flu/treatment/antiviralresistance.html",
+      "evidence_role": "Supports M2 adamantane resistance caveat and resistance-aware interpretation."
+    },
+    {
+      "id": "who_nai_susceptibility",
+      "title": "WHO Antiviral susceptibility of influenza viruses: neuraminidase inhibitor methods",
+      "url": "https://www.who.int/teams/global-influenza-programme/laboratory-network/quality-assurance/antiviral-susceptibility-influenza/neuraminidase-inhibitor",
+      "evidence_role": "Supports neuraminidase inhibition assay as a validation route."
+    },
+    {
+      "id": "fda_influenza_antivirals",
+      "title": "FDA Influenza Antiviral Drugs and Related Information",
+      "url": "https://www.fda.gov/drugs/information-drug-class/influenza-flu-antiviral-drugs-and-related-information",
+      "evidence_role": "Regulatory source for influenza antiviral products and labels."
+    }
+  ],
+  "open_data_sources": [
+    {
+      "id": "rcsb_pdb",
+      "title": "RCSB Protein Data Bank",
+      "url": "https://www.rcsb.org/",
+      "api": "https://data.rcsb.org/rest/v1/core/entry/{pdb_id}",
+      "evidence_role": "Protein-ligand structure metadata and structure provenance."
+    },
+    {
+      "id": "pubmed",
+      "title": "PubMed / NCBI E-utilities",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/",
+      "esearch": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi",
+      "esummary": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi",
+      "evidence_role": "Literature metadata for target, drug, structure, and assay evidence."
+    },
+    {
+      "id": "chembl",
+      "title": "ChEMBL",
+      "url": "https://www.ebi.ac.uk/chembl/",
+      "api": "https://www.ebi.ac.uk/chembl/api/data/",
+      "evidence_role": "Known bioactivity and target-ligand data entry point."
+    },
+    {
+      "id": "bindingdb",
+      "title": "BindingDB",
+      "url": "https://www.bindingdb.org/",
+      "evidence_role": "Curated binding and inhibition data entry point."
+    },
+    {
+      "id": "pubchem",
+      "title": "PubChem",
+      "url": "https://pubchem.ncbi.nlm.nih.gov/",
+      "evidence_role": "Compound identifiers, structures, and bioassay entry point."
+    },
+    {
+      "id": "uniprot",
+      "title": "UniProt",
+      "url": "https://www.uniprot.org/",
+      "evidence_role": "Protein sequence, annotation, and accession lookup entry point."
+    }
+  ],
+  "pdb_entries": [
+    {
+      "pdb_id": "4CPL",
+      "fetch_status": "ok",
+      "title": "Structure of the Neuraminidase from the B/Brisbane/60/2008 virus.",
+      "experimental_method": "X-RAY DIFFRACTION",
+      "resolution": 2.0,
+      "release_date": "2014-05-14T00:00:00.000+00:00",
+      "primary_citation_title": "A Novel I221 L Substitution in Neuraminidase Confers High Level Resistance to Oseltamivir in Influenza B Viruses.",
+      "primary_citation_year": 2014,
+      "primary_citation_pubmed_id": 24795482,
+      "rcsb_url": "https://www.rcsb.org/structure/4CPL"
+    }
+  ],
+  "pubmed_queries": [
+    "\"influenza B\" neuraminidase inhibitor oseltamivir zanamivir",
+    "\"influenza B neuraminidase\" crystal structure inhibitor",
+    "\"influenza B\" neuraminidase inhibition assay"
+  ],
+  "pubmed_articles": [
+    {
+      "pmid": "37567255",
+      "title": "Resistance profiles for the investigational neuraminidase inhibitor AV5080 in influenza A and B viruses.",
+      "journal": "Antiviral research",
+      "pubdate": "2023 Sep",
+      "first_author": "Ivashchenko AA",
+      "doi_or_elocation": "doi: 10.1016/j.antiviral.2023.105701",
+      "pubmed_url": "https://pubmed.ncbi.nlm.nih.gov/37567255/",
+      "query": "\"influenza B\" neuraminidase inhibitor oseltamivir zanamivir"
+    },
+    {
+      "pmid": "30299356",
+      "title": "Neuraminidase inhibitor resistance in influenza: a clinical perspective.",
+      "journal": "Current opinion in infectious diseases",
+      "pubdate": "2018 Dec",
+      "first_author": "Lee N",
+      "doi_or_elocation": "doi: 10.1097/QCO.0000000000000498",
+      "pubmed_url": "https://pubmed.ncbi.nlm.nih.gov/30299356/",
+      "query": "\"influenza B\" neuraminidase inhibitor oseltamivir zanamivir"
+    },
+    {
+      "pmid": "11225320",
+      "title": "[Neuraminidase inhibitor].",
+      "journal": "Nihon rinsho. Japanese journal of clinical medicine",
+      "pubdate": "2000 Nov",
+      "first_author": "Kaji M",
+      "doi_or_elocation": "",
+      "pubmed_url": "https://pubmed.ncbi.nlm.nih.gov/11225320/",
+      "query": "\"influenza B\" neuraminidase inhibitor oseltamivir zanamivir"
+    },
+    {
+      "pmid": "9651151",
+      "title": "Structure-activity relationship studies of novel carbocyclic influenza neuraminidase inhibitors.",
+      "journal": "Journal of medicinal chemistry",
+      "pubdate": "1998 Jul 2",
+      "first_author": "Kim CU",
+      "doi_or_elocation": "",
+      "pubmed_url": "https://pubmed.ncbi.nlm.nih.gov/9651151/",
+      "query": "\"influenza B neuraminidase\" crystal structure inhibitor"
+    },
+    {
+      "pmid": "29641358",
+      "title": "H3N2 influenza viruses in humans: Viral mechanisms, evolution, and evaluation.",
+      "journal": "Human vaccines & immunotherapeutics",
+      "pubdate": "2018",
+      "first_author": "Allen JD",
+      "doi_or_elocation": "doi: 10.1080/21645515.2018.1462639",
+      "pubmed_url": "https://pubmed.ncbi.nlm.nih.gov/29641358/",
+      "query": "\"influenza B\" neuraminidase inhibition assay"
+    },
+    {
+      "pmid": "37258672",
+      "title": "A pan-influenza antibody inhibiting neuraminidase via receptor mimicry.",
+      "journal": "Nature",
+      "pubdate": "2023 Jun",
+      "first_author": "Momont C",
+      "doi_or_elocation": "doi: 10.1038/s41586-023-06136-y",
+      "pubmed_url": "https://pubmed.ncbi.nlm.nih.gov/37258672/",
+      "query": "\"influenza B\" neuraminidase inhibition assay"
+    },
+    {
+      "pmid": "35784305",
+      "title": "Validation of a Harmonized Enzyme-Linked-Lectin-Assay (ELLA-NI) Based Neuraminidase Inhibition Assay Standard Operating Procedure (SOP) for Quantification of N1 Influenza Antibodies and the Use of a Calibrator to Improve the Reproducibility of the ELLA-NI With Reverse Genetics Viral and Recombinant Neuraminidase Antigens: A FLUCOP Collaborative Study.",
+      "journal": "Frontiers in immunology",
+      "pubdate": "2022",
+      "first_author": "Bernard MC",
+      "doi_or_elocation": "doi: 10.3389/fimmu.2022.909297",
+      "pubmed_url": "https://pubmed.ncbi.nlm.nih.gov/35784305/",
+      "query": "\"influenza B\" neuraminidase inhibition assay"
+    }
+  ],
+  "open_data_queries": [
+    "ChEMBL target search: influenza B neuraminidase",
+    "BindingDB query: influenza B neuraminidase inhibitor",
+    "PubChem compound controls: oseltamivir, zanamivir, peramivir"
+  ],
+  "network_errors": [],
+  "known_drug_rows": [
+    {
+      "drug": "oseltamivir",
+      "target_id": "influenza_b_na",
+      "mechanism": "neuraminidase inhibitor",
+      "status_for_workflow": "positive_control",
+      "notes": "NA inhibitor active context should be evaluated for B-flu separately",
+      "source_url": "https://www.cdc.gov/flu/hcp/antivirals/summary-clinicians.html"
+    },
+    {
+      "drug": "zanamivir",
+      "target_id": "influenza_b_na",
+      "mechanism": "neuraminidase inhibitor",
+      "status_for_workflow": "positive_control",
+      "notes": "NA inhibitor control for B-flu workflow",
+      "source_url": "https://www.cdc.gov/flu/hcp/antivirals/summary-clinicians.html"
+    },
+    {
+      "drug": "peramivir",
+      "target_id": "influenza_b_na",
+      "mechanism": "neuraminidase inhibitor",
+      "status_for_workflow": "positive_control",
+      "notes": "NA inhibitor control for B-flu workflow",
+      "source_url": "https://www.cdc.gov/flu/hcp/antivirals/summary-clinicians.html"
+    }
+  ],
+  "structure_rows": [
+    {
+      "pdb_id": "4CPL",
+      "target_id": "influenza_b_na",
+      "ligand": "NA inhibitor or analog",
+      "use": "candidate_structure_verify_before_use",
+      "description": "Influenza B neuraminidase structure example; verify ligand and chain before docking",
+      "source_url": "https://www.rcsb.org/structure/4CPL"
+    }
+  ],
+  "closed_loop_assets": {
+    "primary_structure": {
+      "pdb_id": "4CPL",
+      "ligand": "NA inhibitor or analog",
+      "use": "candidate_structure_verify_before_use",
+      "description": "Influenza B neuraminidase structure example; verify ligand and chain before docking",
+      "source_url": "https://www.rcsb.org/structure/4CPL",
+      "metadata_status": "ok",
+      "resolution": 2.0,
+      "rcsb_url": "https://www.rcsb.org/structure/4CPL"
+    },
+    "positive_controls": [
+      "oseltamivir",
+      "zanamivir",
+      "peramivir"
+    ],
+    "reference_controls": [],
+    "historical_controls": [],
+    "binding_site": {
+      "source": "co_crystal_or_homologous_na_site",
+      "description": "Conserved neuraminidase active site; use a B-flu co-crystal structure when available.",
+      "reference_ligand": "zanamivir or oseltamivir analog",
+      "key_residues": [
+        "Arg triad",
+        "acidic pocket residues",
+        "framework residues"
+      ],
+      "box_strategy": "Use co-crystallized inhibitor centroid or validated NA active-site alignment."
+    },
+    "computational_validation": [
+      "Use known NA inhibitors as controls.",
+      "Verify the selected B-flu PDB and ligand before docking.",
+      "Run docking and pose checks as with A/H1N1 NA."
+    ],
+    "experimental_validation": [
+      "Neuraminidase inhibition assay with influenza B NA.",
+      "Cell-based follow-up only after biochemical enrichment."
+    ],
+    "assay_path": "Neuraminidase inhibition assay with influenza B NA. | Cell-based follow-up only after biochemical enrichment."
+  },
+  "evidence_quality": {
+    "score": 0.8677,
+    "readiness": "ready_for_mvp_closed_loop",
+    "components": {
+      "clinical_controls": 1.0,
+      "structure_metadata": 0.5,
+      "literature_metadata": 1.0,
+      "assay_path": 1.0,
+      "open_data_entry_points": 1.0,
+      "catalog_prior": 0.855
+    },
+    "counts": {
+      "pdb_entries": 1,
+      "ok_pdb_entries": 1,
+      "queued_pdb_entries": 0,
+      "pubmed_articles": 7,
+      "positive_controls": 3,
+      "reference_controls": 0,
+      "historical_controls": 0,
+      "open_data_queries": 3
+    },
+    "interpretation": "Evidence score ranks source readiness for the computational closed loop; it is not a measured efficacy score."
+  },
+  "source_traceability": {
+    "target_catalog_id": "influenza_b_na",
+    "target_catalog_recommendation": "primary_for_b_flu",
+    "known_drugs_file": "./ai_mol_loop/targets/influenza/known_drugs.csv",
+    "pdb_structures_file": "./ai_mol_loop/targets/influenza/pdb_structures.csv",
+    "evidence_sources_file": "./ai_mol_loop/targets/influenza/evidence_sources.json"
+  }
+}
