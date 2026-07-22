@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 420" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif">
+  <rect width="680" height="420" fill="#ffffff"/>
+  <text x="340" y="28" font-size="18" font-weight="700" fill="#1a2233" text-anchor="middle">打分管线选择树 (pipeline_router.py)</text>
+  <text x="340" y="48" font-size="12" fill="#667" text-anchor="middle">按"可用证据(受体?)"路由, 而非按"L2 模型版本"挑</text>
+
+  <!-- root -->
+  <rect x="250" y="64" width="180" height="44" rx="8" fill="#34495e"/>
+  <text x="340" y="83" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">靶点 (name / ChEMBL ID)</text>
+  <text x="340" y="100" font-size="10" fill="#cde" text-anchor="middle">TargetResolver 解析 + 查受体注册表</text>
+
+  <!-- branch line to receptor check -->
+  <line x1="340" y1="108" x2="340" y2="140" stroke="#888" stroke-width="1.5"/>
+  <rect x="270" y="140" width="140" height="40" rx="8" fill="#2980b9"/>
+  <text x="340" y="165" font-size="13" fill="#fff" text-anchor="middle">有 3D 受体 pdbqt ?</text>
+
+  <!-- YES -> cascade -->
+  <line x1="270" y1="160" x2="150" y2="225" stroke="#888" stroke-width="1.5"/>
+  <text x="205" y="190" font-size="11" fill="#16a085" font-weight="700">YES</text>
+  <rect x="40" y="225" width="220" height="120" rx="10" fill="#f0f7f4" stroke="#16a085" stroke-width="2"/>
+  <text x="150" y="248" font-size="13" font-weight="700" fill="#0a7" text-anchor="middle">级联分支 CASCADE</text>
+  <text x="150" y="270" font-size="11" fill="#234" text-anchor="middle">L2 粗筛 (哈希 0.689)</text>
+  <text x="150" y="288" font-size="11" fill="#234" text-anchor="middle">→ smina 对接精排 (LE)</text>
+  <text x="150" y="306" font-size="11" fill="#234" text-anchor="middle">→ 融合 L2+LE 重排</text>
+  <text x="150" y="330" font-size="11" font-weight="700" fill="#8e44ad" text-anchor="middle">NA 实测融合 AUC = 0.9242</text>
+
+  <!-- NO -> library -->
+  <line x1="410" y1="160" x2="530" y2="225" stroke="#888" stroke-width="1.5"/>
+  <text x="475" y="190" font-size="11" fill="#c0392b" font-weight="700">NO</text>
+  <rect x="420" y="225" width="220" height="120" rx="10" fill="#fdf3f2" stroke="#c0392b" stroke-width="2"/>
+  <text x="530" y="248" font-size="13" font-weight="700" fill="#a33" text-anchor="middle">文库分支 LIBRARY</text>
+  <text x="530" y="270" font-size="11" fill="#234" text-anchor="middle">L2 (哈希 0.689, 通用最佳)</text>
+  <text x="530" y="288" font-size="11" fill="#234" text-anchor="middle">→ ADMET (L3)</text>
+  <text x="530" y="306" font-size="11" fill="#234" text-anchor="middle">→ UniMol (L4, 若有)</text>
+  <text x="530" y="330" font-size="11" font-weight="700" fill="#2f7ed8" text-anchor="middle">聚合中位 AUC ≈ 0.689</text>
+
+  <!-- opt-in note -->
+  <rect x="40" y="362" width="600" height="44" rx="8" fill="#f7f7f9" stroke="#ccc" stroke-width="1"/>
+  <text x="340" y="382" font-size="11" fill="#445" text-anchor="middle">opt-in: 设 L2_MODEL_PATH 可让任一分支改用检索重训模型 (NA 上 0.485→0.935, 但聚合退化, 默认不启用)</text>
+  <text x="340" y="399" font-size="11" fill="#445" text-anchor="middle">扩展: 在 receptor_registry.json 添加靶点的 pdbqt+对接盒 → 该靶自动走级联</text>
+</svg>

@@ -1,0 +1,83 @@
+{
+  "aggregates": {
+    "auc_final4_labeled": {
+      "mean": 0.769739,
+      "median": 0.857143,
+      "median_bootstrap_95ci": [
+        0.837217,
+        0.886607
+      ],
+      "n": 492,
+      "q1": 0.666667,
+      "q3": 1.0
+    },
+    "auc_l2_labeled": {
+      "mean": 0.797389,
+      "median": 0.875962,
+      "median_bootstrap_95ci": [
+        0.86584,
+        0.894776
+      ],
+      "n": 492,
+      "q1": 0.721875,
+      "q3": 1.0
+    },
+    "gate_pass_rate": {
+      "mean": 0.871362,
+      "median": 0.8795,
+      "median_bootstrap_95ci": [
+        0.8781,
+        0.8804
+      ],
+      "n": 1000,
+      "q1": 0.86455,
+      "q3": 0.887025
+    },
+    "observed_enrichment_at_1pct_final4": {
+      "mean": 3.187128,
+      "median": 0.0,
+      "median_bootstrap_95ci": [
+        0.0,
+        0.0
+      ],
+      "n": 825,
+      "q1": 0.0,
+      "q3": 0.0
+    },
+    "observed_enrichment_at_1pct_l2": {
+      "mean": 1.9336,
+      "median": 0.0,
+      "median_bootstrap_95ci": [
+        0.0,
+        0.0
+      ],
+      "n": 825,
+      "q1": 0.0,
+      "q3": 0.0
+    },
+    "recall_at_1pct_final4": {
+      "mean": 0.031871,
+      "median": 0.0,
+      "median_bootstrap_95ci": [
+        0.0,
+        0.0
+      ],
+      "n": 825,
+      "q1": 0.0,
+      "q3": 0.0
+    },
+    "recall_at_1pct_l2": {
+      "mean": 0.019336,
+      "median": 0.0,
+      "median_bootstrap_95ci": [
+        0.0,
+        0.0
+      ],
+      "n": 825,
+      "q1": 0.0,
+      "q3": 0.0
+    }
+  },
+  "n_pairs": 10000000,
+  "n_targets": 1000
+}

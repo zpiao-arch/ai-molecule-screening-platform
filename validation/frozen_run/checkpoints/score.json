@@ -1,0 +1,23 @@
+{
+  "input_fingerprint": "a10141b594797660dd2399003de5d2658859206f5c8429ac2e99ea1565d25fde",
+  "inputs": {
+    "cache_metadata_sha256": "7ba3576ee389033f149387e2f6f3530e63623840bf7a4de004e763c62e2493af",
+    "l2_model_sha256": "7d3746e10448f76fcc481cd63acd526bb827913f2c498ac1a975405260aba52b",
+    "pool_manifest_fingerprint": "00f27b6519217cc32b32d4c11071d79fcf7ae92de08b8f181cf05e934c50afae",
+    "source_code": {
+      "<validated-workspace>/scientific_validation/four_level_cli_1kx10k/batch_cli.py": "113cdff5308d3888d928b7b38598f6be1c5ccb9596699d7d64dc2584716023ac",
+      "<validated-workspace>/评分_work_package/评分/l2_bindingdb.py": "7e244f31cfaaf25e7d0f67c661a9ae47958a430e4ec5f749714f70c54c0e7f49",
+      "<validated-workspace>/评分_work_package/评分/scoring.py": "89fdc186fa3180e4967124fb925de625470520a0dc14724dc744e75f3f1f2ce4"
+    },
+    "target_manifest_sha256": "12b29e5d2291dc8295240cadb023efa24b9999373dd885051e36f016b99c33fd"
+  },
+  "metadata": {},
+  "outputs": {
+    "n_pairs": 10000000,
+    "n_targets": 1000,
+    "summary_sha256": "29e04bdebc6779fd9a4a623862b8276f08bd474013519a79e1ae02ea3c131fe6"
+  },
+  "stage": "score",
+  "status": "complete",
+  "updated_at_utc": "2026-07-21T08:54:38.772367+00:00"
+}

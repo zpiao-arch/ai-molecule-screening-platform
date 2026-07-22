@@ -1,0 +1,27 @@
+{
+  "input_fingerprint": "a44d544b2c10303e512a7b8a74422a6086c140deab54362a4e38dc7f18de0cab",
+  "inputs": {
+    "cpu": 2,
+    "exhaustiveness": 4,
+    "hac_max": 50,
+    "receptor_sha256": "90eb67f469649ad985474ebd8d71cd82588fa32d31ecab3fa8e16aca392b9081",
+    "score_sha256": "07f222d12a477afc2a995df970e10cab511df0f5c82ec87e49aafd6bd89072a2",
+    "source_code": {
+      "<validated-workspace>/scientific_validation/four_level_cli_1kx10k/batch_cli.py": "113cdff5308d3888d928b7b38598f6be1c5ccb9596699d7d64dc2584716023ac",
+      "<validated-workspace>/评分_work_package/评分/dock_rerank.py": "85d9dd2a60922e909ad63186db05d5d4f6e00b5de599f3e18a23484edd5d0798"
+    },
+    "target_id": "CHEMBL2051",
+    "timeout": 90,
+    "top_n": 300,
+    "workers": 4
+  },
+  "metadata": {},
+  "outputs": {
+    "metrics_sha256": "cf1dda400d888b87d39a9f40843dd956ce67b6ad3b5467d279e2ac0cd126aa1a",
+    "n_submitted": 300,
+    "summary_sha256": "8b631c062aa1b75a5982a896f2ae8706ef08aa2f400174ce77d1f024ddd14773"
+  },
+  "stage": "dock",
+  "status": "complete",
+  "updated_at_utc": "2026-07-21T08:55:07.424195+00:00"
+}

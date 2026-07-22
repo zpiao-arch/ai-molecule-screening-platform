@@ -1,0 +1,99 @@
+{
+  "categorical_fields": {
+    "gate_status": {
+      "mismatch_indices": [],
+      "passed": true
+    },
+    "l1_model_asset_id": {
+      "mismatch_indices": [],
+      "passed": true
+    },
+    "l1_status": {
+      "mismatch_indices": [],
+      "passed": true
+    },
+    "l3_model_asset_id": {
+      "mismatch_indices": [],
+      "passed": true
+    },
+    "l3_status": {
+      "mismatch_indices": [],
+      "passed": true
+    },
+    "l4_model_asset_id": {
+      "mismatch_indices": [],
+      "passed": true
+    },
+    "l4_status": {
+      "mismatch_indices": [],
+      "passed": true
+    },
+    "layer2_model_asset_id": {
+      "mismatch_indices": [],
+      "passed": true
+    },
+    "layer2_status": {
+      "mismatch_indices": [],
+      "passed": true
+    }
+  },
+  "fixture_categories": {
+    "CCCCCCCCCCCCCCc1ccc(Oc2ccccc2)c(O)c1": "coverage_normal",
+    "CCCCN(C)[C@@H]1C=C(C(=O)O)C[C@H](N)[C@H]1NC(C)=O": "CHEMBL2051_heldout_positive",
+    "CCCN1C(=O)N(Cc2ccc3ccccc3c2)[C@H](Cc2ccccc2)[C@H](O)[C@@H](O)[C@H]1Cc1ccccc1": "coverage_normal",
+    "CCCNC(=O)c1c(N)n(-c2cc(OC)cc(OC)c2)c2nc3ccccc3nc12": "coverage_normal",
+    "CCCO[C@@H]1C=C(C(=O)O)C[C@H](N=CN)[C@H]1NC(C)=O": "CHEMBL2051_heldout_positive",
+    "CC[C@H]1OC(=O)[C@H](C)[C@@H](O[C@H]2C[C@@](C)(OC)[C@@H](O)[C@H](C)O2)[C@H](C)[C@@H](O[C@@H]2O[C@H](C)C[C@H](N(C)Cc3ccc(-c4cn(CCCCCCCC(=O)NO)nn4)cc3)[C@H]2O)[C@](C)(OC)C[C@@H](C)C(=O)[C@H](C)[C@@H](O)[C@]1(C)O": "coverage_normal",
+    "CN1CCN(c2ncc(Br)n3ccnc23)CC1": "coverage_normal",
+    "CO/N=C(\\C)c1cc(C)cc(C)c1NC(=O)c1sccc1S(=O)(=O)Nc1onc(C)c1Cl": "coverage_normal",
+    "COCC(=O)N(c1cc(Cl)ncn1)C1CCN(CCc2ccccc2)CC1": "coverage_normal",
+    "Cc1[nH]c([C@@H](Cc2cn(C)c3ccccc23)NC(=O)[C@H](CC(C)C)N(C)C(=O)NC2CCCCC2)nc1C(=O)O": "coverage_normal",
+    "Cc1ccc(CC(COC(=O)C(C)(C)C)CN(O)/C(S)=N/Cc2ccc(NS(C)(=O)=O)cc2)cc1C": "coverage_normal",
+    "Cc1ccc(S(=O)(=O)Nc2cc(O)cc3cccnc23)cc1": "coverage_normal",
+    "Cc1nc(O)c(CCc2nc3ccccc3o2)cc1C(N)=O": "coverage_normal",
+    "Cn1cc(C(Cc2ccccc2)N=O)c2ccccc21": "coverage_normal",
+    "Fc1cccc(Cl)c1CNc1ccc(N2CCCC2)cc1": "toxicity_flagged",
+    "NC(=O)Nc1cccc(-c2cc(CC(=O)O)cc(-c3cc4nc(N)ccc4[nH]3)c2O)c1": "coverage_normal",
+    "Nc1ccn([C@@H]2O[C@H](CO)[C@@H](OP(=O)(S)OC[C@H]3O[C@@H](n4ccc(=O)[nH]c4=O)[C@H](O)[C@@H]3OP(=O)(S)OC[C@H]3O[C@@H](n4ccc(=O)[nH]c4=O)[C@H](O)[C@@H]3OP(=O)(S)OC[C@H]3O[C@@H](n4ccc5c(=O)[nH]c(N)nc54)[C@H](O)[C@@H]3OP(=O)(S)OC[C@H]3O[C@@H](n4ccc(=O)[nH]c4=O)[C@H](O)[C@@H]3OP(=O)(S)OC[C@H]3O[C@@H](n4ccc5c(=O)[nH]c(N)nc54)[C@H](O)[C@@H]3OP(=O)(S)OC[C@H]3O[C@@H](n4cnc5c(N)ncnc54)[C@H](O)[C@@H]3OP(=O)(S)OC[C@H]3O[C@@H](n4ccc5c(=O)[nH]c(N)nc54)[C@H](O)[C@@H]3OP(=O)(S)OC[C@H]3O[C@@H](n4ccc(N)nc4=O)[C@H](O)[C@@H]3OP(=O)(S)OC[C@H]3O[C@@H](n4ccc(=O)[nH]c4=O)[C@H](O)[C@@H]3OP(=O)(S)OC[C@H]3O[C@@H](n4ccc(=O)[nH]c4=O)[C@H](O)[C@@H]3OP(=O)(S)OCC(O)COP(=O)(S)O[C@H]3[C@@H](O)[C@H](n4ccc(=O)[nH]c4=O)O[C@@H]3COP(=O)(S)O[C@H]3[C@@H](O)[C@H](n4ccc(=O)[nH]c4=O)O[C@@H]3COP(=O)(S)O[C@H]3[C@@H](O)[C@H](n4ccc(N)nc4=O)O[C@@H]3COP(=O)(S)O[C@H]3[C@@H](O)[C@H](n4ccc5c(=O)[nH]c(N)nc54)O[C@@H]3COP(=O)(S)O[C@H]3[C@@H](O)[C@H](n4cnc5c(N)ncnc54)O[C@@H]3COP(=O)(S)O[C@H]3[C@@H](O)[C@H](n4ccc5c(=O)[nH]c(N)nc54)O[C@@H]3COP(=O)(S)O[C@H]3[C@@H](O)[C@H](n4ccc(=O)[nH]c4=O)O[C@@H]3COP(=O)(S)O[C@H]3[C@@H](O)[C@H](n4ccc5c(=O)[nH]c(N)nc54)O[C@@H]3COP(=O)(S)O[C@H]3[C@@H](O)[C@H](n4ccc(=O)[nH]c4=O)O[C@@H]3COP(=O)(S)O[C@H]3[C@@H](O)[C@H](n4ccc(=O)[nH]c4=O)O[C@@H]3COP(=O)(S)O[C@H]3[C@@H](O)[C@H](n4ccc(N)nc4=O)O[C@@H]3CO)[C@H]2O)c(=O)n1": "high_molecular_weight",
+    "O=C(NCCc1c[nH]c2c1C(=O)C(C1(c3ccccc3)C(=O)c3ccccc3C1=O)=CC2=O)OCc1ccccc1": "coverage_normal",
+    "O=C(O)Cn1cc(Cc2nc3c(F)c(F)cc(F)c3s2)c2cc(Cl)ccc21": "coverage_normal",
+    "O=C(O)[C@@H](Cc1c[nH]c2ccccc12)NS(=O)(=O)c1ccc(C#Cc2ccc([N+](=O)[O-])cc2)s1": "coverage_normal"
+  },
+  "invalid_input": {
+    "batch_rejected": true,
+    "passed": true,
+    "scalar_rejected": true,
+    "smiles": "not-a-valid-smiles"
+  },
+  "n_molecules": 20,
+  "numeric_fields": {
+    "final_score": {
+      "finite_mask_match": true,
+      "max_abs_diff": 0.0,
+      "passed": true
+    },
+    "l1": {
+      "finite_mask_match": true,
+      "max_abs_diff": 0.0,
+      "passed": true
+    },
+    "l2": {
+      "finite_mask_match": true,
+      "max_abs_diff": 0.0,
+      "passed": true
+    },
+    "l3": {
+      "finite_mask_match": true,
+      "max_abs_diff": 0.0,
+      "passed": true
+    },
+    "l4": {
+      "finite_mask_match": true,
+      "max_abs_diff": 0.0,
+      "passed": true
+    }
+  },
+  "passed": true,
+  "route_branch_match": true,
+  "tolerance": 0.0001
+}

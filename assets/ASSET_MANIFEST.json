@@ -1,0 +1,31 @@
+{
+  "schema": "four-level-molecule-cli.external-assets.v1",
+  "validated_runtime": {
+    "python": "3.11",
+    "numpy": "1.26.4",
+    "scikit_learn": "1.7.2",
+    "torch": "2.8.0",
+    "unimol_tools": "0.1.4.post1"
+  },
+  "files": {
+    "data/bindingdb_202606_target_match_examples.csv": "0b02786ccf5a4ed2352660f974a33c827494183d69a1b1e0e4bfbafeb645f2e8",
+    "data/chembl_37_target_match_examples.csv": "4044ad4a581add2dd3758887f65dbc1394b328c4b0638700383bb868bafcac5b",
+    "data/chembl_uniprot_mapping.txt": "5b21436984a41e31bfe178d807544c7ece4649303c397d461c14a61f27f6d082",
+    "data/lib_smiles.txt": "56a09242194fafd516d6a84e1daf9c2a826122158ee3273bf48f031ba1ab9730",
+    "scoring/models/admet/bbbp.pkl": "6ec4605f3deb39c347356075e6a96775151f2257a0936a92cbb69aaa0266b7e4",
+    "scoring/models/admet/clintox.pkl": "e763996e9d7eeb6f084b0a98ef7e28c70d66e4a10ce1b8d8233913ed8e0f89a2",
+    "scoring/models/admet/sider.pkl": "12fb09137ab241b8d7bae13aed74e0632a4e78c5ee59d5b6155060b2e4e35a5b",
+    "scoring/models/admet/tox21.pkl": "0987f14c66b087d4ea7525daafff1d28c958b06b1352daf6fdd46c1c69d177c9",
+    "scoring/models/bindingdb_l2/l2_model.joblib": "0e6ef8f2a587f36ac8cf5feedf852fc0f909e17276aa92275f83d69ade3fee3a",
+    "scoring/models/bindingdb_l2/l2_model_sklearn_1_7_2.joblib": "7d3746e10448f76fcc481cd63acd526bb827913f2c498ac1a975405260aba52b",
+    "scoring/models/ref_embeddings.npz": "a680c1a4b39a03255ffc1bfc32b852105b1dd4c5fffe57fece27d0d5239fd439",
+    "scoring/models/ref_smiles.pkl": "5ad8cfe28e05a4f06cbe8dc7cb3968ad06ec959ae0accb18fb3038a7a62c017b",
+    "scoring/models/drugbank_ref.txt": "e8ec3bf0b3a98bd1f4c4770f22cb8df0591684cd93b5f7c3cfe510b965a1681c",
+    "scoring/models/unimol/models--dptech--Uni-Mol-Models/snapshots/9f19c45c718192888a1c8a1c905f69f0755ea502/mol_pre_all_h_220816.pt": "7f5f14bb28bf479a0b8f38ebab4bb9d7ae867383f14c4d694d056500fa3446a7",
+    "scoring/models/unimol/models--dptech--Uni-Mol-Models/snapshots/9f19c45c718192888a1c8a1c905f69f0755ea502/mol.dict.txt": "94135cb9a9198f988de684cb61e2c372882a3bd59b8320effbae704c38057127",
+    "scoring/receptors/3TI6_protein_only_obabel.pdbqt": "988aa231d96f7e892e5767e1459aaa798392b3302fda9af7c6184c8ae0f95546",
+    "scoring/receptors/3TI6_protonated.pdbqt": "88a3b6bd17ac2a5fb0f1bb7113046465a6b7f259b8b5790eae374cfaf6d3afc8",
+    "scoring/receptors/3TI6_protonated_pH7.4.pdb": "f758b41918cd4e2d6fe8817f3577803f9f3864c2165b913f3679c2d53b0a5903"
+  },
+  "binaries": ["smina", "obabel"]
+}

@@ -1,8 +1,0 @@
-pdb_id,target_id,ligand,use,description,source_url
-3TI6,influenza_a_h1n1_na,oseltamivir,recommended_demo_structure,2009 pandemic H1N1 neuraminidase complexed with oseltamivir,https://www.rcsb.org/structure/3TI6
-3TI5,influenza_a_h1n1_na,zanamivir,reference_control,2009 pandemic H1N1 neuraminidase complexed with zanamivir,https://www.rcsb.org/
-3TI3,influenza_a_h1n1_na,laninamivir,reference_control,2009 pandemic H1N1 neuraminidase complexed with laninamivir,https://www.rcsb.org/
-4CPL,influenza_b_na,NA inhibitor or analog,candidate_structure_verify_before_use,Influenza B neuraminidase structure example; verify ligand and chain before docking,https://www.rcsb.org/structure/4CPL
-6FS6,influenza_a_pa_endonuclease,baloxavir acid,secondary_demo_structure,Influenza A/California/04/2009 PA endonuclease with bound baloxavir acid,https://www.rcsb.org/structure/6FS6
-6FS8,influenza_b_pa_endonuclease,baloxavir acid,secondary_b_flu_structure,Influenza B endonuclease with bound baloxavir acid,https://www.rcsb.org/structure/6FS8
-2KQT,influenza_a_m2,amantadine,historical_control_structure,Influenza A M2 transmembrane peptide bound to amantadine,https://www.rcsb.org/structure/2KQT

@@ -1,73 +1,133 @@
-# AI Molecule Screening Platform
+# Four-Level Molecule CLI
 
-候选分子筛查与验证工作台：一个面向早期药物发现演示和工程验证的 CLI + FastAPI Web 平台。项目把靶点证据整理、候选分子生成/导入、化学规则过滤、RDKit 描述符校验、docking 计划/可选真实 docking、对照校准、Dashboard 和交付报告组织成一个可复现的计算筛选流程。
+可审计的四级药物分子筛选 CLI：L1 分子质量、L2 靶点结合、L3 ADMET、L4 UniMol 药物相似度，并提供质量门槛、受体级联和可复算的 `1000 × 10000` 批量验证工具。
 
-> This repository supports computational screening and validation planning only. It does not prove biological activity, potency, toxicity, safety, dosing, clinical usefulness, or therapeutic efficacy.
+> 发布状态：当前 `LICENSE` 只允许 source-available 使用，不授予开源再分发权。合规边界见 [COMPLIANCE.md](COMPLIANCE.md)。
 
-## What Is Included
+## 发布边界
 
-- `ai_mol_loop/`: core CLI workflow for Stage 1-8 assets.
-- `webapp/`: FastAPI backend and single-page frontend.
-- `webapp/static/vendor/3Dmol-min.js`: local 3Dmol.js viewer bundle for receptor/pose display.
-- `ai_mol_loop/targets/influenza/`: small public seed evidence for influenza targets, known drugs, PDB IDs, and offline evidence summaries.
-- `scripts/download_public_data.py`: selected public-data downloader for small local caches.
-- `scripts/download_ai_molecule_repos_api.py`: optional source mirror helper for REINVENT4 / DockStream / GraphINVENT / DrugEx style projects.
-- `tests/`, `webapp/tests/`, `ai_mol_loop/tests/`: regression tests and API/frontend contract tests.
+本仓库是完整 source-available 源码包，包含主 CLI、批量验证模块、测试、案例、训练/预计算脚本、历史分析脚本归档以及冻结 run 的紧凑审计快照。模型权重、完整 ChEMBL/BindingDB 数据、受体文件和 10M 候选级 score 分区不放入 GitHub 源码包。对应的本机离线资产包为：
 
-## What Is Not Included
+`../four-level-molecule-cli-offline-assets`
 
-- Runtime projects and generated results: `webapp/projects/`, `outputs/`, `deliverables/`.
-- Large third-party repositories and binaries: `ai_drug_eval_tools/`, `ai_molecule_design_repos/`, Vina/GNINA builds.
-- Large structure/data caches: PDB/PDBQT/SDF docking outputs, full ChEMBL/BindingDB/DrugBank dumps.
-- API keys, `.env` files, commercial software configs, or restricted databases.
+把离线资产包解压并合并到源码包根目录后，目录应包含 `scoring/models/`、根目录 `data/` 和 `scoring/receptors/`。源码包自带的 `scoring/data/` 只是小型案例输入，不能替代根目录的完整 benchmark 数据。smina/obabel 是平台相关二进制，不随资产包分发，需自行安装并设置 `DOCK_BIN_DIR`，也可分别设置 `SMINA_BIN` 和 `OBABEL_BIN`。legacy 行级数据不随 GitHub 源码归档分发，见 [THIRD_PARTY_DATA.md](THIRD_PARTY_DATA.md)。
 
-## Quick Start
+完整文件盘点见 [FULL_SOURCE_INVENTORY.md](FULL_SOURCE_INVENTORY.md)。`legacy/multitarget_benchmark/` 是历史实验和诊断脚本归档，不是当前 1000×10000 CLI 的必要运行路径。
+
+## 已验证范围
+
+- `1000` 个靶点 × `10000` 候选，共 `10000000` 条四级 score。
+- L1/L2/L3/L4 failure 均为 `0`，fit-pair contamination 为 `0`。
+- 正式 CLI 与批量路径的 20 分子等价性复核最大差为 `0`，容差 `1e-4`。
+- CHEMBL2051 的 top-300 对接包含逐分子状态、affinity、ligand efficiency 和命令参数。
+- 冻结运行基线测试：`43 passed`；当前 source-only 默认测试：`92 passed, 10 deselected`；合并离线资产并配置 smina/obabel 后完整本机套件：`102 passed`。测试标记和运行命令见下文。
+
+结果的统计边界见 [VALIDATION.md](VALIDATION.md)，compact snapshot 的证据在 [validation/frozen_run](validation/frozen_run) 中。运行 `python -m scientific_validation.four_level_cli_1kx10k.verify_snapshot --snapshot-dir validation/frozen_run` 验证源码包快照；完整 1 GB 本机 run 仍使用 `verify_run --strict`。pair-heldout 结果不是冷靶点、冷分子、时间外推或湿实验验证；当前受体注册表只有 CHEMBL2051。
+
+## 环境
+
+推荐 Python 3.11：
 
 ```bash
-python3 -m venv .venv
+python3.11 -m venv .venv
 source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-
-python -m py_compile webapp/server.py ai_mol_loop/ai_mol_loop.py
-./start_web.sh
+python -m pip install .
+python -m pip install pytest
 ```
 
-Open [http://localhost:8765/](http://localhost:8765/).
-
-For optional real-chemistry and docking features, install `requirements-optional.txt` and external tools such as AutoDock Vina, OpenBabel, Meeko, and PoseBusters. Without them, the app still runs in proxy/planning mode and will not fabricate docking scores.
-
-## Minimal CLI Demo
+合并离线资产后先检查资产：
 
 ```bash
-PROJECT=demo_runs/flu_na_demo
-
-python ai_mol_loop/ai_mol_loop.py init "$PROJECT"
-python ai_mol_loop/ai_mol_loop.py target-select "$PROJECT" --disease 甲流 --top 5
-python ai_mol_loop/ai_mol_loop.py brief-from-target "$PROJECT" --disease 甲流 --force
-python ai_mol_loop/ai_mol_loop.py evidence-stage2 "$PROJECT" --disease influenza --top 5 --offline
-python ai_mol_loop/ai_mol_loop.py run-demo "$PROJECT" --rounds 2 --n 24 --top 6
-python ai_mol_loop/ai_mol_loop.py stage5-dashboard "$PROJECT" --round 2
-python ai_mol_loop/ai_mol_loop.py stage6-validate "$PROJECT" --round 2
-python ai_mol_loop/ai_mol_loop.py stage7-package "$PROJECT" --round 2
+python scripts/verify_assets.py --asset-root .
 ```
 
-See [REPRODUCIBLE_DEMO.md](REPRODUCIBLE_DEMO.md) for the longer influenza NA path and Stage 4 notes.
+安装后也可直接使用 `four-level-molecule`, `four-level-benchmark`, `four-level-doctor` 和 `four-level-verify-snapshot` 四个命令；未安装时保留 `PYTHONPATH=scoring python scoring/scoring.py` 的脚本用法。
 
-## Public Data
-
-The repository stores only small seed metadata. Selected public structures can be cached locally:
+严格运行时预检：
 
 ```bash
-python scripts/download_public_data.py --out data/public_cache --pdb 3TI6 --pdb 6FS6
+python -m scientific_validation.four_level_cli_1kx10k.runtime_doctor \
+  --scoring-dir scoring --strict
 ```
 
-See [DATA_SOURCES.md](DATA_SOURCES.md) for source stability and local-storage policy.
+## 单分子/小批量评分
 
-## GitHub Release Policy
+```bash
+PYTHONPATH=scoring python scoring/scoring.py \
+  --input examples/hiv_candidates.csv \
+  --target HIV-1_protease \
+  --strict-backends \
+  --output outputs/hiv_scores.csv
+```
 
-This repo is intended to stay small and reviewable. Generated assets should be produced by commands, not committed. If a demo result needs to be shared, use a GitHub Release asset or external storage instead of committing large files to Git history.
+## 1000×10000 批量闭环
 
-## License
+数据资产就位后，在仓库根目录执行：
 
-Project code is released under Apache-2.0. Bundled third-party assets are documented in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+```bash
+export DOCK_BIN_DIR=/path/to/smina-local/bin
+python -m scientific_validation.four_level_cli_1kx10k.batch_cli \
+  --run-dir runs/$(date -u +%Y%m%dT%H%M%SZ) \
+  prepare --targets 1000 --pool-size 10000 --seed 42
+```
+
+随后对同一 `--run-dir` 依次执行：
+
+```bash
+python -m scientific_validation.four_level_cli_1kx10k.batch_cli \
+  --run-dir runs/<RUN_ID> cache-layers --strict --resume
+
+python -m scientific_validation.four_level_cli_1kx10k.batch_cli \
+  --run-dir runs/<RUN_ID> score --resume
+
+python -m scientific_validation.four_level_cli_1kx10k.batch_cli \
+  --run-dir runs/<RUN_ID> dock --target CHEMBL2051 --top-n 300 --resume
+```
+
+最后运行：
+
+```bash
+python -m scientific_validation.four_level_cli_1kx10k.batch_cli \
+  --run-dir runs/<RUN_ID> report
+
+python -m scientific_validation.four_level_cli_1kx10k.verify_run \
+  --run-dir runs/<RUN_ID> --strict
+```
+
+`report` 会重新计算审计报告、补齐 `DESIGN.md`/失败清单/报告 checkpoint，并在完整运行目录生成完整 `MANIFEST.sha256`。源码包内的 compact snapshot 使用单独的 `snapshot.json` 和 `verify_snapshot`；阶段输入和代码哈希会写入 checkpoint；哈希不匹配时续跑会硬失败。
+
+单批 CLI 没有确认阳性/阴性标签时，末尾的虚拟筛选 benchmark 会显示 `not_evaluated`；不会把模型自己排序的 top-5 当作阳性。
+
+## 测试
+
+源码包默认测试不读取外部模型、数据或平台二进制：
+
+```bash
+python -m pytest -q
+```
+
+合并离线资产后，只运行资产集成测试：
+
+```bash
+python -m pytest -q -o addopts='' -m "integration_assets and not integration_docking"
+```
+
+配置 `DOCK_BIN_DIR` 后运行完整测试（含 smina/obabel）：
+
+```bash
+DOCK_BIN_DIR=/path/to/smina-local/bin python -m pytest -q -o addopts=''
+```
+
+构建 UTF-8 安全的 GitHub 源码归档：
+
+```bash
+python scripts/build_source_release.py \
+  --source-dir . \
+  --output ../packages/four-level-molecule-cli-source-YYYYMMDD.zip \
+  --asset-dir ../four-level-molecule-cli-offline-assets \
+  --asset-output ../packages/four-level-molecule-cli-offline-assets-YYYYMMDD.tar.gz
+```
+
+## 许可证
+
+源码包当前没有授予开源再分发许可，见 [LICENSE](LICENSE) 和 [COMPLIANCE.md](COMPLIANCE.md)。UniMol、RDKit、PyTorch、ChEMBL、BindingDB、ADMET 权重和 smina/obabel 各自受其上游许可约束；只有在权利人明确选择许可证后，才能将仓库标为 open source。

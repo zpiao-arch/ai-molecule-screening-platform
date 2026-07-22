@@ -1,0 +1,21 @@
+{
+  "input_fingerprint": "726eff0f8164512d8a014ad232328012798df62b32adb698706e63fcad317f38",
+  "inputs": {
+    "batch_size": 128,
+    "cache_namespace": "4b5b4267ac432b018e5053271d050683209ab2782904ee7b0f315c9d123a4de9",
+    "library_manifest_sha256": "65e1d95c2aa313c38163bdad8229b1fff29f948c0ac825fc6beca431ead9bc46",
+    "multi_process": true,
+    "n_molecules": 98688,
+    "shard_size": 4096,
+    "unimol_device": "mps"
+  },
+  "metadata": {},
+  "outputs": {
+    "cache_metadata_sha256": "7ba3576ee389033f149387e2f6f3530e63623840bf7a4de004e763c62e2493af",
+    "n_molecules": 98688,
+    "summary_sha256": "fd652dafac4c77f2dda476b2292f0d73f983cc306dee3aecf55311a3ab095a67"
+  },
+  "stage": "layer_cache",
+  "status": "complete",
+  "updated_at_utc": "2026-07-21T08:48:10.960277+00:00"
+}

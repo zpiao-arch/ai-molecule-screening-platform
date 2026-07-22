@@ -1,0 +1,9 @@
+{
+  "eligible_fit_pair_overlap_count": 0,
+  "exact_split_key_overlap_count": 0,
+  "fit_pair_overlap_count": 0,
+  "n_pairs": 10000000,
+  "n_targets": 1000,
+  "pool_size": 10000,
+  "seed": 42
+}

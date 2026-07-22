@@ -1,0 +1,106 @@
+{
+  "python": [
+    3,
+    11,
+    15
+  ],
+  "executable": "<validated-workspace>/.venv_four_level_cli/bin/python3",
+  "packages": {
+    "numpy": "1.26.4",
+    "scipy": "1.13.1",
+    "pandas": "1.5.3",
+    "pyarrow": "23.0.1",
+    "scikit-learn": "1.7.2",
+    "joblib": "1.5.3",
+    "rdkit": "2022.9.5",
+    "torch": "2.8.0",
+    "unimol-tools": "0.1.4.post1"
+  },
+  "imports": {
+    "numpy": "ok",
+    "scipy": "ok",
+    "pandas": "ok",
+    "pyarrow": "ok",
+    "sklearn": "ok",
+    "joblib": "ok",
+    "rdkit": "ok",
+    "torch": "ok",
+    "unimol_tools": "ok"
+  },
+  "models": {
+    "l2": {
+      "path": "<validated-workspace>/评分_work_package/评分/models/bindingdb_l2/l2_model.joblib",
+      "exists": true,
+      "size": 2796753,
+      "sha256": "0e6ef8f2a587f36ac8cf5feedf852fc0f909e17276aa92275f83d69ade3fee3a"
+    },
+    "l2_compat_sklearn_1_7_2": {
+      "path": "<validated-workspace>/评分_work_package/评分/models/bindingdb_l2/l2_model_sklearn_1_7_2.joblib",
+      "exists": true,
+      "size": 2695050,
+      "sha256": "7d3746e10448f76fcc481cd63acd526bb827913f2c498ac1a975405260aba52b"
+    },
+    "admet": {
+      "count": 4,
+      "assets": [
+        {
+          "path": "<validated-workspace>/评分_work_package/评分/models/admet/tox21.pkl",
+          "exists": true,
+          "size": 24256017,
+          "sha256": "0987f14c66b087d4ea7525daafff1d28c958b06b1352daf6fdd46c1c69d177c9"
+        },
+        {
+          "path": "<validated-workspace>/评分_work_package/评分/models/admet/bbbp.pkl",
+          "exists": true,
+          "size": 2253570,
+          "sha256": "6ec4605f3deb39c347356075e6a96775151f2257a0936a92cbb69aaa0266b7e4"
+        },
+        {
+          "path": "<validated-workspace>/评分_work_package/评分/models/admet/clintox.pkl",
+          "exists": true,
+          "size": 837014,
+          "sha256": "e763996e9d7eeb6f084b0a98ef7e28c70d66e4a10ce1b8d8233913ed8e0f89a2"
+        },
+        {
+          "path": "<validated-workspace>/评分_work_package/评分/models/admet/sider.pkl",
+          "exists": true,
+          "size": 28384211,
+          "sha256": "12fb09137ab241b8d7bae13aed74e0632a4e78c5ee59d5b6155060b2e4e35a5b"
+        }
+      ]
+    },
+    "unimol_weights": {
+      "path": "<validated-workspace>/评分_work_package/评分/models/unimol/models--dptech--Uni-Mol-Models/snapshots/9f19c45c718192888a1c8a1c905f69f0755ea502/mol_pre_all_h_220816.pt",
+      "exists": true,
+      "size": 190540187,
+      "sha256": "7f5f14bb28bf479a0b8f38ebab4bb9d7ae867383f14c4d694d056500fa3446a7"
+    },
+    "unimol_dict": {
+      "path": "<validated-workspace>/评分_work_package/评分/models/unimol/models--dptech--Uni-Mol-Models/snapshots/9f19c45c718192888a1c8a1c905f69f0755ea502/mol.dict.txt",
+      "exists": true,
+      "size": 91,
+      "sha256": "94135cb9a9198f988de684cb61e2c372882a3bd59b8320effbae704c38057127"
+    },
+    "unimol_references": {
+      "path": "<validated-workspace>/评分_work_package/评分/models/ref_embeddings.npz",
+      "exists": true,
+      "size": 2112713,
+      "sha256": "a680c1a4b39a03255ffc1bfc32b852105b1dd4c5fffe57fece27d0d5239fd439"
+    }
+  },
+  "binaries": {
+    "smina": {
+      "path": "<validated-workspace>/ai_drug_eval_tools/micromamba-root/envs/smina-local/bin/smina",
+      "exists": true,
+      "size": 1903920,
+      "sha256": "b69020914f01a2a07b2adfef96ee211ab851100712e98877141311f7f1a98ce8"
+    },
+    "obabel": {
+      "path": "<validated-workspace>/ai_drug_eval_tools/micromamba-root/envs/smina-local/bin/obabel",
+      "exists": true,
+      "size": 75776,
+      "sha256": "6fd89cc4499c4f016ca8ec64b3a14637a5b044701d8aaf18a663ba13ccf6b5d9"
+    }
+  },
+  "overall": "ok"
+}

@@ -1,0 +1,12 @@
+{
+  "_schema": "靶点 -> 受体 (pdbqt) 注册表。供 pipeline_router 判定'是否走级联对接精排分支'。可按需扩展。匹配键: chembl_id 或 规范化靶点名(小写去空格)。",
+  "entries": {
+    "CHEMBL2051": {
+      "target_name": "Neuraminidase",
+      "pdbqt": "receptors/3TI6_protein_only_obabel.pdbqt",
+      "box_center": [-28.914, 14.334, 20.794],
+      "box_size": [23.585, 20.45, 24.18],
+      "notes": "流感神经氨酸酶; 3TI6; 仅作为可用受体级联资产，不代表 1000 靶点通用性能"
+    }
+  }
+}

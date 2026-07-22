@@ -1,0 +1,21 @@
+{
+  "schema": "four-level-cli.compact-snapshot.v1",
+  "complete_run_manifest_sha256": "7e8323590f78a1d9326d23dccf7aaafb2d2fcde6340160d847e775fd0fa8f2ee",
+  "expected": {
+    "n_targets": 1000,
+    "n_pairs": 10000000,
+    "score_partitions": 1000
+  },
+  "omitted_artifact_classes": [
+    "target_manifest.parquet",
+    "reconstructed_fit_rows.parquet",
+    "scores/target_id=*/part-*.parquet",
+    "pool_manifest/*.parquet",
+    "layer_cache/**/*.parquet",
+    "docking/*/selected_results.parquet",
+    "docking/*/fused_scores.parquet",
+    "docking/*/work/*.pdbqt",
+    "run.log"
+  ],
+  "note": "This archive validates compact evidence only; complete row-level replay requires the original run directory."
+}

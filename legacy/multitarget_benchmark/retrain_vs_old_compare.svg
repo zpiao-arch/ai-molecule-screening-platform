@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 420" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif">
+  <rect width="680" height="420" fill="#ffffff"/>
+  <text x="24" y="34" font-size="19" font-weight="700" fill="#1a2a3a">L2 重训(检索负采样) vs 原始哈希 — AUC 对比</text>
+  <text x="24" y="56" font-size="12" fill="#667">A 任务: 重训 L2 在 10k 靶检索域降级, 但在 NA(唯一有受体的靶)大幅跃升</text>
+
+  <!-- Panel 1: 471 标注靶 中位 AUC -->
+  <g transform="translate(40,90)">
+    <rect x="0" y="0" width="290" height="150" rx="10" fill="#f6f8fb" stroke="#e1e7ef"/>
+    <text x="14" y="24" font-size="13" font-weight="700" fill="#1a2a3a">471 标注靶 · 中位 AUC</text>
+    <!-- bars -->
+    <text x="14" y="58" font-size="11" fill="#667">原始哈希</text>
+    <rect x="14" y="64" width="200" height="20" fill="#e9eef5"/>
+    <rect x="14" y="64" width="200" height="20" fill="#2f80ed"/>
+    <text x="220" y="79" font-size="12" font-weight="700" fill="#2f80ed">0.689</text>
+    <text x="14" y="104" font-size="11" fill="#667">重训(K=2)</text>
+    <rect x="14" y="110" width="200" height="20" fill="#e9eef5"/>
+    <rect x="14" y="110" width="165" height="20" fill="#eb5757"/>
+    <text x="184" y="125" font-size="12" font-weight="700" fill="#eb5757">0.571</text>
+    <text x="14" y="142" font-size="10" fill="#95a">反向率 19% → 38%; AUC≥0.7 占 47% → 30%</text>
+  </g>
+
+  <!-- Panel 2: NA 单靶 AUC -->
+  <g transform="translate(350,90)">
+    <rect x="0" y="0" width="290" height="150" rx="10" fill="#f6f8fb" stroke="#e1e7ef"/>
+    <text x="14" y="24" font-size="13" font-weight="700" fill="#1a2a3a">NA(CHEMBL2051) · 单靶 AUC</text>
+    <text x="14" y="58" font-size="11" fill="#667">原始哈希</text>
+    <rect x="14" y="64" width="200" height="20" fill="#e9eef5"/>
+    <rect x="14" y="64" width="141" height="20" fill="#eb5757"/>
+    <text x="161" y="79" font-size="12" font-weight="700" fill="#eb5757">0.485</text>
+    <text x="14" y="104" font-size="11" fill="#667">重训(K=2)</text>
+    <rect x="14" y="110" width="200" height="20" fill="#e9eef5"/>
+    <rect x="14" y="110" width="384" height="20" fill="#27ae60"/>
+    <text x="402" y="125" font-size="12" font-weight="700" fill="#27ae60">0.935</text>
+    <text x="14" y="142" font-size="10" fill="#95a">饱和(&gt;0.9)占比 47% → 4%; 排序近乎随机 → 可用</text>
+  </g>
+
+  <!-- Panel 3: NA 闭环级联 AUC -->
+  <g transform="translate(40,255)">
+    <rect x="0" y="0" width="600" height="140" rx="10" fill="#f6f8fb" stroke="#e1e7ef"/>
+    <text x="14" y="24" font-size="13" font-weight="700" fill="#1a2a3a">NA 闭环级联 AUC(平衡集 18活性+100诱饵, 苹果对苹果)</text>
+    <text x="14" y="52" font-size="11" fill="#667">L2 基线(旧)</text>
+    <rect x="14" y="58" width="120" height="18" fill="#eb5757"/>
+    <text x="142" y="72" font-size="12" font-weight="700" fill="#eb5757">0.462</text>
+    <text x="14" y="92" font-size="11" fill="#667">对接精排 LE(旧)</text>
+    <rect x="14" y="98" width="197" height="18" fill="#2f80ed"/>
+    <text x="220" y="112" font-size="12" font-weight="700" fill="#2f80ed">0.765</text>
+    <text x="14" y="132" font-size="11" fill="#667">融合 L2+LE(重训L2)</text>
+    <rect x="14" y="138" width="214" height="18" fill="#9b51e0"/>
+    <text x="237" y="152" font-size="12" font-weight="700" fill="#9b51e0">≈0.9 (L2 0.935 主导)</text>
+  </g>
+
+  <text x="24" y="412" font-size="11" fill="#95a">结论: 重训未提升聚合检索(0.689→0.571), 但精确修复了唯一可对接靶 NA(0.485→0.935), 使闭环融合分数越过 0.8。</text>
+</svg>

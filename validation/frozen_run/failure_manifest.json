@@ -1,0 +1,19 @@
+{
+  "docking_status_counts": {
+    "dock_no_score": 21,
+    "dock_timeout": 39,
+    "ok": 157,
+    "prep_timeout": 1,
+    "skipped_hac": 82
+  },
+  "interpretation": {
+    "docking_failures_are_explicit": true,
+    "pair_heldout_is_not_cold_start": true,
+    "unlabeled_background_is_not_confirmed_negative": true
+  },
+  "layer_failures": {
+    "l1": 0,
+    "l3": 0,
+    "l4": 0
+  }
+}

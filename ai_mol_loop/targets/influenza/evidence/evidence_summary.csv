@@ -1,6 +1,0 @@
-target_id,target,pdb_entries,pubmed_articles,positive_controls,primary_pdb,evidence_score,readiness,network_errors,evidence_dir
-influenza_a_h1n1_na,Influenza A(H1N1) neuraminidase,3,8,3,3TI6,0.9967,ready_for_mvp_closed_loop,0,./ai_mol_loop/targets/influenza/evidence/influenza_a_h1n1_na
-influenza_b_na,Influenza B neuraminidase,1,7,3,4CPL,0.8677,ready_for_mvp_closed_loop,0,./ai_mol_loop/targets/influenza/evidence/influenza_b_na
-influenza_a_pa_endonuclease,Influenza A polymerase acidic protein cap-dependent endonuclease,1,6,2,6FS6,0.8659,ready_for_mvp_closed_loop,0,./ai_mol_loop/targets/influenza/evidence/influenza_a_pa_endonuclease
-influenza_b_pa_endonuclease,Influenza B polymerase acidic protein cap-dependent endonuclease,1,7,2,6FS8,0.8303,ready_for_mvp_closed_loop,0,./ai_mol_loop/targets/influenza/evidence/influenza_b_pa_endonuclease
-influenza_a_m2,Influenza A M2 proton channel,1,6,0,2KQT,0.5686,secondary_or_needs_manual_review,0,./ai_mol_loop/targets/influenza/evidence/influenza_a_m2

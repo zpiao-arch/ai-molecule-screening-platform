@@ -1,0 +1,21 @@
+id,smiles,label,description
+FXA_01,C1COCC(=O)N1C2=CC=C(C=C2)N3CC(OC3=O)CNC(=O)C4=CC=C(S4)Cl,known_fxa,利伐沙班(Rivaroxaban)-Factor Xa抑制剂
+FXA_02,COC1=CC=C(C=C1)N2C3=C(CCN(C3=O)C4=CC=C(C=C4)N5CCCCC5=O)C(=N2)C(=O)N,known_fxa,阿哌沙班(Apixaban)-Factor Xa抑制剂
+FXA_03,CN1CCC2=C(C1)SC(=N2)C(=O)NC3CC(CCC3NC(=O)C(=O)NC4=NC=C(C=C4)Cl)C(=O)N(C)C,known_fxa,依度沙班(Edoxaban)-Factor Xa抑制剂
+FXA_04,CN1C=NC2=C1C(=O)N(C(=O)N2C)C,decoy,咖啡因(非抗凝药)
+FXA_05,CC(=O)Oc1ccccc1C(=O)O,decoy,阿司匹林(非抗凝药)
+FXA_06,CC(C)CC1=CC=C(C(C)C(=O)O)C=C1,decoy,布洛芬(非抗凝药)
+FXA_07,CC(=O)Nc1ccc(O)cc1,decoy,对乙酰氨基酚(非抗凝药)
+FXA_08,c1ccccc1,decoy,苯(简单分子)
+FXA_09,c1ccc2c(c1)cccc2,decoy,萘(简单分子)
+FXA_10,O=C(O)c1ccc(N)cc1,decoy,PABA(简单分子)
+FXA_11,O=S(=O)(O)c1ccc(N)cc1,decoy,磺胺(简单分子)
+FXA_12,CC(C)(C)c1ccc(O)cc1,decoy,叔丁基苯酚(简单分子)
+FXA_13,O=C1NC(=O)C2=C1CCN(C2=O)C1=CC=CC=C1,decoy,沙利度胺(有毒)
+FXA_14,COC(=O)C1=CC=CC=C1NC(=O)C2=CC=C(Cl)C=C2,decoy,苯甲酸甲酯衍生物(结构类似)
+FXA_15,CC1=CN(C2CC(N=[N+]=[N-])C(CO)O2)C(=O)NC1=O,decoy,齐多夫定(HIV药物)
+FXA_16,CC(C)CN(CC(C)C)S(=O)(=O)C1=CC=C(NC(=O)OC2CCOC2)C=C1,decoy,达芦那韦(HIV药物)
+FXA_17,CCC(CC)OC1C=C(CC(N)=O)C(O)CC1NC(C)=O,decoy,奥司他韦(流感药物)
+FXA_18,OC(=O)c1ccc(NC(=O)c2ccccc2)cc1,decoy,苯甲酰胺衍生物(诱饵)
+FXA_19,CC(C)OC(=O)N1C=C(C(=O)NC2=CC=C(F)C=C2F)C2=C1C=CC(F)=C2,decoy,多替拉韦(HIV药物)
+FXA_20,O=C1C(=O)C(C(=O)NC2=CC=C(F)C=C2C)=CN1CC1=CC=CC(C)=C1F,decoy,雷特格韦(HIV药物)

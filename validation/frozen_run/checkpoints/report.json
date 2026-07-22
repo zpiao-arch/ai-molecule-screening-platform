@@ -1,0 +1,17 @@
+{
+  "input_fingerprint": "32c9e5062b2f009e9aa820207413d3efad8ddfff5c2eca2ed4a6759f0f6ed05f",
+  "inputs": {
+    "docking_metrics_sha256": "cf1dda400d888b87d39a9f40843dd956ce67b6ad3b5467d279e2ac0cd126aa1a",
+    "report_code_sha256": "6449d9c81cd0d5cf73504383dd8c5ec64ed51a97a3a5fc387127f5f4e88fbf3a",
+    "score_summary_sha256": "29e04bdebc6779fd9a4a623862b8276f08bd474013519a79e1ae02ea3c131fe6",
+    "target_manifest_sha256": "12b29e5d2291dc8295240cadb023efa24b9999373dd885051e36f016b99c33fd"
+  },
+  "metadata": {},
+  "outputs": {
+    "report_sha256": "f1808e8a9835134d33e26528ce76e97f5d222aaa6762939116206d6df831800c",
+    "summary_sha256": "e1d05fcaf164e50f8dbde0f9e41868e68764ece0fa421f69ebc2d6b17e9f87b6"
+  },
+  "stage": "report",
+  "status": "complete",
+  "updated_at_utc": "2026-07-21T08:56:24.819887+00:00"
+}

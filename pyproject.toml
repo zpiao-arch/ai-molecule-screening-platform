@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "four-level-molecule-cli"
+version = "0.2.0"
+description = "Auditable four-level drug-molecule screening CLI"
+readme = "README.md"
+requires-python = ">=3.11,<3.12"
+license = {file = "LICENSE"}
+authors = [{name = "Project Contributors"}]
+dependencies = [
+  "numpy==1.26.4",
+  "scipy==1.13.1",
+  "pandas==1.5.3",
+  "pyarrow==23.0.1",
+  "scikit-learn==1.7.2",
+  "joblib==1.5.3",
+  "rdkit==2022.9.5",
+  "torch==2.8.0",
+  "unimol-tools==0.1.4.post1",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8.4,<9"]
+
+[project.scripts]
+four-level-molecule = "scoring.scoring:main"
+four-level-benchmark = "scientific_validation.four_level_cli_1kx10k.batch_cli:main"
+four-level-doctor = "scientific_validation.four_level_cli_1kx10k.runtime_doctor:main"
+four-level-verify-snapshot = "scientific_validation.four_level_cli_1kx10k.verify_snapshot:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["scoring*", "scientific_validation*"]
+
+[tool.setuptools.package-data]
+scoring = ["*.json", "*.md", "data/*.csv"]
+scientific_validation = ["four_level_cli_1kx10k/*.md"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]

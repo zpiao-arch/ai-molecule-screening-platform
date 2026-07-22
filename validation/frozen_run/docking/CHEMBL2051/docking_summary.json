@@ -1,0 +1,20 @@
+{
+  "cpu": 2,
+  "exhaustiveness": 4,
+  "hac_max": 50,
+  "n_submitted": 300,
+  "obabel_bin": null,
+  "receptor": "<offline-assets>/scoring/receptors/3TI6_protein_only_obabel.pdbqt",
+  "receptor_sha256": "90eb67f469649ad985474ebd8d71cd82588fa32d31ecab3fa8e16aca392b9081",
+  "smina_bin": null,
+  "status_counts": {
+    "dock_no_score": 21,
+    "dock_timeout": 39,
+    "ok": 157,
+    "prep_timeout": 1,
+    "skipped_hac": 82
+  },
+  "target_id": "CHEMBL2051",
+  "timeout_seconds": 90,
+  "top_n_requested": 300
+}

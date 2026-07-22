@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="680" height="360" viewBox="0 0 680 360" font-family="-apple-system,Helvetica,Arial,sans-serif">
+  <rect width="680" height="360" fill="#ffffff"/>
+  <text x="24" y="34" font-size="19" font-weight="700" fill="#1a2233">L2 单模型 (471 靶同口径) vs 级联融合 — 中位/平衡 AUC</text>
+
+  <!-- L2 single-model bars (left group) -->
+  <g font-size="12" fill="#1a2233">
+    <text x="24" y="62" font-weight="600" fill="#444">A. L2 单模型 · 471 靶中位 AUC（越高越好）</text>
+    <!-- hash 0.689 -->
+    <rect x="40" y="86" width="120" height="150" fill="#2563eb" opacity="0.92"/>
+    <text x="100" y="80" font-size="13" font-weight="700" text-anchor="middle" fill="#1d4ed8">0.689</text>
+    <text x="100" y="248" font-size="12" text-anchor="middle" fill="#1a2233">哈希基线</text>
+    <text x="100" y="264" font-size="11" text-anchor="middle" fill="#666">✓ 通用最佳</text>
+    <!-- CE 0.571 -->
+    <rect x="180" y="121" width="120" height="115" fill="#f59e0b" opacity="0.92"/>
+    <text x="240" y="115" font-size="13" font-weight="700" text-anchor="middle" fill="#b45309">0.571</text>
+    <text x="240" y="248" font-size="12" text-anchor="middle" fill="#1a2233">CE 重训</text>
+    <text x="240" y="264" font-size="11" text-anchor="middle" fill="#666">↓ 退化</text>
+    <!-- BPR 0.499 -->
+    <rect x="320" y="161" width="120" height="75" fill="#ef4444" opacity="0.9"/>
+    <text x="380" y="155" font-size="13" font-weight="700" text-anchor="middle" fill="#b91c1c">0.499</text>
+    <text x="380" y="248" font-size="12" text-anchor="middle" fill="#1a2233">BPR v1</text>
+    <text x="380" y="264" font-size="11" text-anchor="middle" fill="#666">≈随机</text>
+    <!-- ListNet 0.506 -->
+    <rect x="460" y="159" width="120" height="77" fill="#ef4444" opacity="0.9"/>
+    <text x="520" y="153" font-size="13" font-weight="700" text-anchor="middle" fill="#b91c1c">0.506</text>
+    <text x="520" y="248" font-size="12" text-anchor="middle" fill="#1a2233">ListNet v2</text>
+    <text x="520" y="264" font-size="11" text-anchor="middle" fill="#666">≈随机</text>
+
+    <!-- baseline 0.5 line -->
+    <line x1="32" y1="236" x2="612" y2="236" stroke="#999" stroke-dasharray="4 4"/>
+    <text x="616" y="240" font-size="10" fill="#999">0.5</text>
+
+    <!-- Cascade group -->
+    <text x="24" y="300" font-weight="600" fill="#444">B. NA 级联融合（修正前 0.582 → 修正后 0.935）</text>
+    <!-- before 0.582 -->
+    <rect x="40" y="312" width="150" height="36" fill="#ef4444" opacity="0.9"/>
+    <text x="115" y="335" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">0.582 (旧尺度错位)</text>
+    <!-- after 0.935 -->
+    <rect x="200" y="312" width="180" height="36" fill="#16a34a" opacity="0.92"/>
+    <text x="290" y="335" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">0.935 (修正融合)</text>
+    <!-- balanced 0.922 -->
+    <rect x="390" y="312" width="170" height="36" fill="#22c55e" opacity="0.92"/>
+    <text x="475" y="335" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">0.922 (平衡集)</text>
+  </g>
+  <text x="24" y="354" font-size="10.5" fill="#777">结论：单模型重训全军覆没(哈希胜)；级联融合修正 bug 后破 0.8 目标。</text>
+</svg>

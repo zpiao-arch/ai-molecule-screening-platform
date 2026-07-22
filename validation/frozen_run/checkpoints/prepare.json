@@ -1,0 +1,25 @@
+{
+  "input_fingerprint": "8815457f552ed26715f8aa3d518223842097df6b5fb44bbc8a2dc7ddfc5c0768",
+  "inputs": {
+    "bindingdb_sha256": "0b02786ccf5a4ed2352660f974a33c827494183d69a1b1e0e4bfbafeb645f2e8",
+    "chembl_sha256": "4044ad4a581add2dd3758887f65dbc1394b328c4b0638700383bb868bafcac5b",
+    "frozen_library_sha256": "56a09242194fafd516d6a84e1daf9c2a826122158ee3273bf48f031ba1ab9730",
+    "n_targets": 1000,
+    "pool_size": 10000,
+    "seed": 42,
+    "source_code": {
+      "<validated-workspace>/scientific_validation/four_level_cli_1kx10k/batch_cli.py": "666856440ecf97f13fb392a8b65e088b49944fe2b74bd794ea2a6986add07674",
+      "<validated-workspace>/scientific_validation/four_level_cli_1kx10k/dataset.py": "acdd499b83754583220f03f4764cdfdff3a318245fd23540b0b774cfa0ac2e6b",
+      "<validated-workspace>/评分_work_package/评分/pipeline_router.py": "9c489a0d5f135808c02e643e33e8e043ec8dff0b63a006a8630782fcfc03f59e"
+    }
+  },
+  "metadata": {},
+  "outputs": {
+    "n_pairs": 10000000,
+    "pool_manifest_fingerprint": "00f27b6519217cc32b32d4c11071d79fcf7ae92de08b8f181cf05e934c50afae",
+    "target_manifest_sha256": "12b29e5d2291dc8295240cadb023efa24b9999373dd885051e36f016b99c33fd"
+  },
+  "stage": "prepare",
+  "status": "complete",
+  "updated_at_utc": "2026-07-21T04:34:07.863630+00:00"
+}
