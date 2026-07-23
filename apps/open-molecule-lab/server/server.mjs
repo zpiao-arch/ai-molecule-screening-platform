@@ -6,21 +6,11 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { createArtifactStore, StoreError } from "./store.mjs";
-import { runPreflight } from "./preflight.mjs";
-import { createWorkerManager } from "./worker.mjs";
-
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const appRoot = path.resolve(__dirname, "..");
 const sourceRoot = path.resolve(appRoot, "..", "..");
 const distRoot = path.join(appRoot, "dist");
-const dataRoot = path.resolve(process.env.OPEN_MOLECULE_DATA_DIR || path.join(appRoot, "data"));
 const runsRoot = path.resolve(process.env.OPEN_MOLECULE_RUNS_DIR || path.join(appRoot, "runs"));
-const pythonPath = process.env.OPEN_MOLECULE_PYTHON || "python3";
-const bridgePath = path.join(__dirname, "python-bridge.py");
-const externalAssetRoot = process.env.OPEN_MOLECULE_ASSET_ROOT
-  ? path.resolve(process.env.OPEN_MOLECULE_ASSET_ROOT)
-  : "";
 const scoringEntry = path.join(sourceRoot, "scoring", "scoring.py");
 const benchmarkEntry = path.join(
   sourceRoot,
@@ -32,60 +22,7 @@ const assetManifest = path.join(sourceRoot, "assets", "ASSET_MANIFEST.json");
 const receptorRegistry = path.join(sourceRoot, "scoring", "receptor_registry.json");
 const host = process.env.OPEN_MOLECULE_HOST || process.env.HOST || "127.0.0.1";
 const port = Number(process.env.OPEN_MOLECULE_PORT || process.env.PORT || 4173);
-const maxBodyBytes = Number(process.env.OPEN_MOLECULE_MAX_BODY_BYTES || 8 * 1024 * 1024);
-
-function externalAssetBundleVerified() {
-  if (!externalAssetRoot) return false;
-  const manifestPath = path.join(externalAssetRoot, "ASSET_MANIFEST.json");
-  if (!existsSync(manifestPath)) return false;
-  const verify = spawnSync(
-    pythonPath,
-    [
-      path.join(sourceRoot, "scripts", "verify_assets.py"),
-      "--asset-root",
-      externalAssetRoot,
-      "--manifest",
-      manifestPath,
-    ],
-    { cwd: sourceRoot, encoding: "utf8", timeout: 120_000 },
-  );
-  try {
-    return verify.status === 0 && JSON.parse(String(verify.stdout || "{}")).ok === true;
-  } catch {
-    return false;
-  }
-}
-
-const assetBundleVerified = externalAssetBundleVerified();
-const artifactStore = createArtifactStore({ dataRoot, runsRoot, sourceRoot, pythonPath, bridgePath });
-const workerManager = createWorkerManager({
-  store: artifactStore,
-  sourceRoot,
-  pythonPath,
-  bridgePath,
-  assetRoot: externalAssetRoot,
-  sminaBin: process.env.SMINA_BIN || "",
-  obabelBin: process.env.OBABEL_BIN || "",
-});
-
-async function recoverInterruptedRuns() {
-  for (const run of await artifactStore.listRuns()) {
-    if (!["queued", "running"].includes(run.status)) continue;
-    if (run.pid) await workerManager.terminateOrphan(run.pid, "SIGTERM");
-    await artifactStore.updateRun(
-      run.runId,
-      {
-        status: "failed",
-        finishedAt: new Date().toISOString(),
-        pid: null,
-        error: { code: "worker_interrupted", message: "server restarted before the worker reached a terminal state" },
-      },
-      { event: "worker_interrupted", status: "failed" },
-    );
-  }
-}
-
-await recoverInterruptedRuns();
+const maxBodyBytes = 1024 * 1024;
 
 const scientificBoundary =
   "plan_only: no molecule set is attached and no L1/L2/L3/L4 scoring or docking has been executed.";
@@ -120,13 +57,7 @@ async function readJsonBody(request) {
   let total = 0;
   for await (const chunk of request) {
     total += chunk.length;
-    if (total > maxBodyBytes) {
-      const error = new Error(`request body exceeds ${maxBodyBytes} bytes`);
-      error.status = 413;
-      error.code = "payload_too_large";
-      error.field = "body";
-      throw error;
-    }
+    if (total > maxBodyBytes) throw new Error("request body exceeds 1 MiB");
     chunks.push(chunk);
   }
   const text = Buffer.concat(chunks).toString("utf8");
@@ -136,7 +67,7 @@ async function readJsonBody(request) {
 
 function pythonModuleAvailable(moduleName) {
   const probe = spawnSync(
-    pythonPath,
+    "python3",
     ["-c", `import importlib.util,sys;sys.exit(0 if importlib.util.find_spec(${JSON.stringify(moduleName)}) else 1)`],
     { stdio: "ignore", timeout: 3000 },
   );
@@ -144,9 +75,7 @@ function pythonModuleAvailable(moduleName) {
 }
 
 function executablePath(names) {
-  const explicit = names
-    .map((name) => process.env[`${String(name).toUpperCase()}_BIN`])
-    .filter(Boolean);
+  const explicit = [process.env.SMINA_BIN, process.env.OBABEL_BIN].filter(Boolean);
   for (const candidate of [...explicit, ...names]) {
     const value = String(candidate || "").trim();
     if (!value) continue;
@@ -158,20 +87,16 @@ function executablePath(names) {
 }
 
 function modelStatusRows() {
-  const scoringRoot = externalAssetRoot
-    ? path.join(externalAssetRoot, "scoring")
-    : path.join(sourceRoot, "scoring");
-  const modelRoot = path.join(scoringRoot, "models");
-  const l2Available = assetBundleVerified && [
-    path.join(modelRoot, "bindingdb_l2", "l2_model_sklearn_1_7_2.joblib"),
-    path.join(modelRoot, "bindingdb_l2", "l2_model.joblib"),
+  const l2Available = [
+    path.join(sourceRoot, "scoring", "models", "bindingdb_l2", "l2_model_sklearn_1_7_2.joblib"),
+    path.join(sourceRoot, "scoring", "models", "bindingdb_l2", "l2_model.joblib"),
   ].some(existsSync);
-  const l3Available = assetBundleVerified && ["tox21.pkl", "bbbp.pkl", "clintox.pkl", "sider.pkl"].every((name) =>
-    existsSync(path.join(modelRoot, "admet", name)),
+  const l3Available = ["tox21.pkl", "bbbp.pkl", "clintox.pkl", "sider.pkl"].every((name) =>
+    existsSync(path.join(sourceRoot, "scoring", "models", "admet", name)),
   );
-  const l4Available = assetBundleVerified && [
-    path.join(modelRoot, "ref_embeddings.npz"),
-    path.join(modelRoot, "ref_smiles.pkl"),
+  const l4Available = [
+    path.join(sourceRoot, "scoring", "models", "ref_embeddings.npz"),
+    path.join(sourceRoot, "scoring", "models", "ref_smiles.pkl"),
   ].every(existsSync);
   const dockingAvailable = Boolean(executablePath(["smina"])) && Boolean(executablePath(["obabel"]));
   return [
@@ -265,15 +190,9 @@ async function receptorForTarget(targetId) {
         return normalizeTargetName(key) === target || normalizeTargetName(entry.target_name) === target;
       })?.[1];
     if (!matched) return { registered: false, available: false, resourceId: "" };
-    const sourcePath = path.isAbsolute(matched.pdbqt)
+    const receptorPath = path.isAbsolute(matched.pdbqt)
       ? matched.pdbqt
       : path.resolve(path.dirname(receptorRegistry), matched.pdbqt);
-    const externalPath = externalAssetRoot && !path.isAbsolute(matched.pdbqt)
-      ? path.resolve(externalAssetRoot, "scoring", matched.pdbqt)
-      : "";
-    const receptorPath = externalAssetRoot && !path.isAbsolute(matched.pdbqt)
-      ? externalPath
-      : sourcePath;
     return {
       registered: true,
       available: existsSync(receptorPath),
@@ -344,20 +263,14 @@ function plannedStages(route) {
   ];
 }
 
-function equivalentCli(targetId, runId, route) {
-  const command = [
+function equivalentCli(targetId, runId) {
+  return [
     "four-level-molecule \\",
     "  --input <molecule-set.csv> \\",
     `  --target ${JSON.stringify(targetId)} \\`,
-    `  --mode ${route.branch} \\`,
-    "  --asset-root '<asset-root>' \\",
     "  --strict-backends \\",
     `  --output runs/${runId}/scores.csv`,
-  ];
-  if (route.branch === "cascade") {
-    command.splice(command.length - 1, 0, "  --cascade-top-n 300 \\");
-  }
-  return command.join("\n");
+  ].join("\n");
 }
 
 async function writePlanBundle({ runId, prompt, spec, route, stages, assetRequirements, createdAt }) {
@@ -489,7 +402,7 @@ async function createPromptPlan(body) {
     stages,
     assetRequirements,
     executionBoundary: scientificBoundary,
-    equivalentCli: equivalentCli(targetId, runId, route),
+    equivalentCli: equivalentCli(targetId, runId),
     bundle,
   };
 }
@@ -499,141 +412,18 @@ async function handleApi(request, response, url) {
     return jsonResponse(response, 200, {
       ok: true,
       product: "open-molecule-lab",
-      mode: "local_execution",
-      sourceRoot: ".",
+      mode: "plan_only",
+      sourceRoot,
       cli: {
         available: existsSync(scoringEntry) && existsSync(benchmarkEntry),
-        scoringEntry: "scoring/scoring.py",
-        benchmarkEntry: "scientific_validation/four_level_cli_1kx10k/batch_cli.py",
+        scoringEntry,
+        benchmarkEntry,
       },
-      assetManifestPresent: existsSync(
-        externalAssetRoot ? path.join(externalAssetRoot, "ASSET_MANIFEST.json") : assetManifest,
-      ),
+      assetManifestPresent: existsSync(assetManifest),
     });
   }
   if (request.method === "GET" && url.pathname === "/api/model-status") {
     return jsonResponse(response, 200, { ok: true, models: modelStatusRows() });
-  }
-  if (request.method === "POST" && url.pathname === "/api/molecule-sets") {
-    try {
-      const result = await artifactStore.createMoleculeSet(await readJsonBody(request));
-      return jsonResponse(response, result.created ? 201 : 200, { ok: true, ...result.metadata });
-    } catch (error) {
-      const known = error instanceof StoreError;
-      return jsonResponse(
-        response,
-        known ? error.status : Number(error?.status) || 400,
-        errorPayload(
-          known ? error.code : error?.code || "invalid_molecule_set",
-          error instanceof Error ? error.message : String(error),
-          error?.field,
-        ),
-      );
-    }
-  }
-  if (request.method === "GET" && url.pathname.startsWith("/api/molecule-sets/")) {
-    const moleculeSetId = decodeURIComponent(url.pathname.slice("/api/molecule-sets/".length));
-    const metadata = await artifactStore.getMoleculeSet(moleculeSetId);
-    return metadata
-      ? jsonResponse(response, 200, { ok: true, ...metadata })
-      : jsonResponse(response, 404, errorPayload("molecule_set_not_found", "Molecule set not found"));
-  }
-  if (request.method === "POST" && url.pathname === "/api/runs") {
-    try {
-      const body = await readJsonBody(request);
-      const plan = await artifactStore.getPlan(body.planRunId);
-      if (!plan) throw new StoreError("Plan run not found", { code: "plan_not_found", field: "planRunId", status: 404 });
-      const moleculeSet = await artifactStore.getMoleculeSet(body.moleculeSetId);
-      if (!moleculeSet) throw new StoreError("Molecule set not found", { code: "molecule_set_not_found", field: "moleculeSetId", status: 404 });
-      const preflight = await runPreflight({
-        sourceRoot,
-        pythonPath,
-        assetRoot: externalAssetRoot,
-        routeBranch: plan.route.branch,
-        targetId: plan.spec.target.id,
-        expectedCandidateCount: plan.spec.moleculeSet.expectedCandidateCount,
-        actualCandidateCount: moleculeSet.nRows,
-        sminaBin: process.env.SMINA_BIN || "",
-        obabelBin: process.env.OBABEL_BIN || "",
-      });
-      let run = await artifactStore.createExecutionRun({
-        planRunId: body.planRunId,
-        plan,
-        moleculeSet,
-        preflight,
-      });
-      if (run.status === "queued") {
-        await workerManager.start(run);
-        run = await artifactStore.getRun(run.runId);
-      }
-      return jsonResponse(response, 201, { ok: true, ...run });
-    } catch (error) {
-      const known = error instanceof StoreError;
-      return jsonResponse(
-        response,
-        known ? error.status : Number(error?.status) || 400,
-        errorPayload(
-          known ? error.code : error?.code || "invalid_run",
-          error instanceof Error ? error.message : String(error),
-          error?.field,
-        ),
-      );
-    }
-  }
-  if (request.method === "GET" && url.pathname.startsWith("/api/runs/") && url.pathname.endsWith("/results")) {
-    const runId = decodeURIComponent(url.pathname.slice("/api/runs/".length, -"/results".length));
-    const run = await artifactStore.getRun(runId);
-    if (!run) return jsonResponse(response, 404, errorPayload("run_not_found", "Run not found"));
-    if (run.status !== "complete") {
-      return jsonResponse(response, 409, errorPayload("run_not_complete", `Run status is ${run.status}`));
-    }
-    try {
-      const integrity = await artifactStore.verifyManifest(path.join(runsRoot, runId));
-      if (!integrity.ok) {
-        return jsonResponse(
-          response,
-          409,
-          errorPayload("evidence_integrity_failed", "Run evidence does not match MANIFEST.sha256"),
-        );
-      }
-      const summary = JSON.parse(await fs.readFile(path.join(runsRoot, runId, "results", "summary.json"), "utf8"));
-      const rawOffset = Number(url.searchParams.get("offset") || 0);
-      const rawLimit = Number(url.searchParams.get("limit") || 100);
-      const view = url.searchParams.get("view") || "ranked";
-      if (!Number.isInteger(rawOffset) || rawOffset < 0 || !Number.isInteger(rawLimit) || rawLimit < 1 || rawLimit > 200 || !new Set(["ranked", "failed", "all"]).has(view)) {
-        return jsonResponse(response, 400, errorPayload("invalid_pagination", "offset must be >= 0, limit must be 1..200, view must be ranked/failed/all", "pagination"));
-      }
-      const pageProcess = spawnSync(
-        pythonPath,
-        [bridgePath, "page-results", "--input", path.join(runsRoot, runId, "results", "scores.csv"), "--offset", String(rawOffset), "--limit", String(rawLimit), "--view", view],
-        { cwd: sourceRoot, encoding: "utf8", timeout: 30_000 },
-      );
-      const pageLine = String(pageProcess.stdout || "").trim().split("\n").filter(Boolean).at(-1);
-      const page = pageLine ? JSON.parse(pageLine) : null;
-      if (pageProcess.status !== 0 || !page?.ok) {
-        return jsonResponse(response, 500, errorPayload("results_page_failed", page?.error || "result page failed"));
-      }
-      return jsonResponse(response, 200, { ...summary, ...page });
-    } catch {
-      return jsonResponse(response, 500, errorPayload("results_missing", "Completed run has no result summary"));
-    }
-  }
-  if (request.method === "POST" && url.pathname.startsWith("/api/runs/") && url.pathname.endsWith("/cancel")) {
-    const runId = decodeURIComponent(url.pathname.slice("/api/runs/".length, -"/cancel".length));
-    const run = await artifactStore.getRun(runId);
-    if (!run) return jsonResponse(response, 404, errorPayload("run_not_found", "Run not found"));
-    if (!["queued", "running"].includes(run.status)) {
-      return jsonResponse(response, 409, errorPayload("run_not_cancellable", `Run status is ${run.status}`));
-    }
-    const cancelled = await workerManager.cancel(runId);
-    return jsonResponse(response, 202, { ok: true, ...cancelled });
-  }
-  if (request.method === "GET" && url.pathname.startsWith("/api/runs/")) {
-    const runId = decodeURIComponent(url.pathname.slice("/api/runs/".length));
-    const run = await artifactStore.getRun(runId);
-    return run
-      ? jsonResponse(response, 200, { ok: true, ...run })
-      : jsonResponse(response, 404, errorPayload("run_not_found", "Run not found"));
   }
   if (request.method === "POST" && url.pathname === "/api/prompt-plan") {
     try {
@@ -642,8 +432,8 @@ async function handleApi(request, response, url) {
     } catch (error) {
       return jsonResponse(
         response,
-        Number(error?.status) || 400,
-        errorPayload(error?.code || "invalid_prompt_plan", error instanceof Error ? error.message : String(error), error?.field),
+        400,
+        errorPayload("invalid_prompt_plan", error instanceof Error ? error.message : String(error), error?.field),
       );
     }
   }
@@ -700,12 +490,6 @@ server.listen(port, host, () => {
   process.stdout.write(`Open Molecule Lab listening on http://${host}:${actualPort}\n`);
 });
 
-let shuttingDown = false;
 for (const signal of ["SIGINT", "SIGTERM"]) {
-  process.on(signal, async () => {
-    if (shuttingDown) return;
-    shuttingDown = true;
-    await workerManager.shutdown();
-    server.close(() => process.exit(0));
-  });
+  process.on(signal, () => server.close(() => process.exit(0)));
 }

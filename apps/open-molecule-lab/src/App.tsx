@@ -3,36 +3,27 @@ import {
   AlertTriangle,
   ArrowRight,
   ChevronDown,
-  ChevronLeft,
-  ChevronRight,
   ClipboardList,
-  FileCheck2,
   FlaskConical,
   Loader2,
   Play,
   ShieldCheck,
   Sparkles,
-  Square,
   TerminalSquare,
-  Upload,
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
-import type { ChangeEvent, FormEvent, ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
+import type { FormEvent, ReactNode } from "react";
 
 import type {
   LabHealth,
-  ExecutionRun,
-  MoleculeSet,
   ModelStatusRow,
   PromptError,
   PromptPlan,
-  ResultSummary,
-  ResultView,
   RouteMode,
 } from "./types";
 
 const scientificBoundary =
-  "没有附加分子集并完成严格本机运行前，界面只显示可审计的 RunSpec；任何排序都不构成分子评分、对接证据、药效或安全性结论。";
+  "当前原型只生成可审计的 RunSpec 和执行计划；没有附加分子集并运行严格后端前，不构成分子评分、对接证据、药效或安全性结论。";
 
 const defaultPrompt =
   "为流感 A 型神经氨酸酶设计一次四级候选筛选。先检查本地资产，使用 1,000 个候选，最终保留 10 个分子供后续复核。";
@@ -86,10 +77,9 @@ function formatNumber(value: number) {
 
 function toneForStatus(status?: string) {
   const value = String(status || "").toLowerCase();
-  if (value.includes("available") || value.includes("ready") || value.includes("passed") || value.includes("complete")) return "good";
-  if (value.includes("blocked") || value.includes("not_found") || value.includes("error") || value.includes("failed")) return "bad";
-  if (value.includes("skipped") || value.includes("review") || value.includes("cancelled")) return "warn";
-  if (value.includes("running") || value.includes("queued") || value.includes("planned")) return "info";
+  if (value.includes("available") || value.includes("ready") || value.includes("planned")) return "good";
+  if (value.includes("blocked") || value.includes("not_found") || value.includes("error")) return "bad";
+  if (value.includes("skipped") || value.includes("review")) return "warn";
   return "idle";
 }
 
@@ -104,26 +94,12 @@ function App() {
   const [plan, setPlan] = useState<PromptPlan | null>(null);
   const [serviceError, setServiceError] = useState("");
   const [submitError, setSubmitError] = useState("");
-  const [uploadError, setUploadError] = useState("");
-  const [runError, setRunError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const [moleculeSet, setMoleculeSet] = useState<MoleculeSet | null>(null);
-  const [run, setRun] = useState<ExecutionRun | null>(null);
-  const [results, setResults] = useState<ResultSummary | null>(null);
-  const [resultsLoading, setResultsLoading] = useState(false);
   const [auditOpen, setAuditOpen] = useState(false);
-  const resultsRequestRef = useRef(0);
 
   const runnerTone = health?.ok ? "good" : health ? "bad" : "info";
-  const runnerLabel = health?.ok ? "local runner online" : health ? "server unavailable" : "connecting";
+  const runnerLabel = health?.ok ? "plan server online" : health ? "server unavailable" : "connecting";
   const routeTone = toneForStatus(plan?.route.status);
-  const runTone = toneForStatus(run?.status);
-  const runActive = run?.status === "queued" || run?.status === "running";
-  const countMatches = Boolean(plan && moleculeSet && plan.spec.moleculeSet.expectedCandidateCount === moleculeSet.nRows);
-  const canRun = Boolean(
-    health?.ok && plan && moleculeSet && countMatches && plan.route.status !== "blocked" && !runActive,
-  );
   const equivalentCli = useMemo(
     () =>
       plan?.equivalentCli ||
@@ -191,12 +167,7 @@ function App() {
         const message = payload.ok ? `prompt-plan HTTP ${response.status}` : payload.error.message;
         throw new Error(message);
       }
-      resultsRequestRef.current += 1;
       setPlan(payload);
-      setRun(null);
-      setResults(null);
-      setResultsLoading(false);
-      setRunError("");
       setAuditOpen(false);
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : String(error));
@@ -204,114 +175,6 @@ function App() {
       setIsSubmitting(false);
     }
   }
-
-  async function uploadMoleculeSet(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.currentTarget.files?.[0];
-    if (!file) return;
-    resultsRequestRef.current += 1;
-    setResults(null);
-    setResultsLoading(false);
-    setUploadError("");
-    setIsUploading(true);
-    try {
-      const csvText = await file.text();
-      const response = await fetch("/api/molecule-sets", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: file.name, csvText, license: "user-supplied" }),
-      });
-      const payload = (await response.json()) as MoleculeSet | PromptError;
-      if (!response.ok || !payload.ok) {
-        throw new Error(payload.ok ? `molecule-sets HTTP ${response.status}` : payload.error.message);
-      }
-      setMoleculeSet(payload);
-      setRun(null);
-    } catch (error) {
-      setMoleculeSet(null);
-      setUploadError(error instanceof Error ? error.message : String(error));
-    } finally {
-      setIsUploading(false);
-      event.currentTarget.value = "";
-    }
-  }
-
-  async function launchRun() {
-    if (!plan || !moleculeSet || !canRun) return;
-    resultsRequestRef.current += 1;
-    setRunError("");
-    setResults(null);
-    setResultsLoading(false);
-    try {
-      const response = await fetch("/api/runs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planRunId: plan.runId, moleculeSetId: moleculeSet.moleculeSetId }),
-      });
-      const payload = (await response.json()) as ExecutionRun | PromptError;
-      if (!response.ok || !payload.ok) {
-        throw new Error(payload.ok ? `runs HTTP ${response.status}` : payload.error.message);
-      }
-      setRun(payload);
-    } catch (error) {
-      setRunError(error instanceof Error ? error.message : String(error));
-    }
-  }
-
-  async function cancelRun() {
-    if (!run || !runActive) return;
-    try {
-      const response = await fetch(`/api/runs/${run.runId}/cancel`, { method: "POST" });
-      const payload = (await response.json()) as ExecutionRun | PromptError;
-      if (!response.ok || !payload.ok) throw new Error(payload.ok ? `cancel HTTP ${response.status}` : payload.error.message);
-      setRun(payload);
-    } catch (error) {
-      setRunError(error instanceof Error ? error.message : String(error));
-    }
-  }
-
-  async function loadResults(runId: string, view: ResultView = "ranked", offset = 0) {
-    const requestId = ++resultsRequestRef.current;
-    setResultsLoading(true);
-    try {
-      const params = new URLSearchParams({ view, offset: String(offset), limit: "50" });
-      const response = await fetch(`/api/runs/${runId}/results?${params}`, { cache: "no-store" });
-      if (!response.ok) throw new Error(`results HTTP ${response.status}`);
-      const payload = (await response.json()) as ResultSummary;
-      if (requestId === resultsRequestRef.current) setResults(payload);
-    } catch (error) {
-      if (requestId === resultsRequestRef.current) {
-        setResults(null);
-        setRunError(error instanceof Error ? error.message : String(error));
-      }
-    } finally {
-      if (requestId === resultsRequestRef.current) setResultsLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    if (!run || !runActive) return undefined;
-    let cancelled = false;
-    const poll = window.setInterval(async () => {
-      try {
-        const response = await fetch(`/api/runs/${run.runId}`, { cache: "no-store" });
-        if (!response.ok) throw new Error(`run HTTP ${response.status}`);
-        const payload = (await response.json()) as ExecutionRun;
-        if (cancelled) return;
-        setRun(payload);
-      } catch (error) {
-        if (!cancelled) setRunError(error instanceof Error ? error.message : String(error));
-      }
-    }, 1000);
-    return () => {
-      cancelled = true;
-      window.clearInterval(poll);
-    };
-  }, [run?.runId, runActive]);
-
-  useEffect(() => {
-    if (!run || run.status !== "complete" || results) return;
-    void loadResults(run.runId);
-  }, [run, results]);
 
   return (
     <main className="product-shell">
@@ -322,7 +185,7 @@ function App() {
         </a>
         <div className="topbar-actions">
           <span className="service-state"><span className={`dot ${runnerTone}`} />{runnerLabel}</span>
-          <span className="service-state muted">local-first · strict CLI</span>
+          <span className="service-state muted">local-first · plan-only</span>
         </div>
       </header>
 
@@ -383,32 +246,15 @@ function App() {
             </select>
           </label>
 
-          <label className="field upload-field">
-            <span>候选分子 CSV</span>
-            <span className="file-picker">
-              <Upload size={16} aria-hidden="true" />
-              <span>{isUploading ? "正在校验 CSV" : "选择 id,smiles 文件"}</span>
-              <input type="file" accept=".csv,text/csv" onChange={uploadMoleculeSet} disabled={isUploading} />
-            </span>
-            {moleculeSet ? (
-              <small className="upload-meta">
-                <FileCheck2 size={14} aria-hidden="true" />
-                {moleculeSet.name} · {formatNumber(moleculeSet.nRows)} 行 · {moleculeSet.inputSha256.slice(0, 12)}
-              </small>
-            ) : (
-              <small className="upload-meta muted">上传后才会创建不可变 MoleculeSet。</small>
-            )}
-          </label>
-
           <button className="primary-action" type="submit" disabled={!health?.ok || isSubmitting}>
             {isSubmitting ? <Loader2 size={18} aria-hidden="true" /> : <Play size={18} aria-hidden="true" />}
             {isSubmitting ? "正在生成 RunSpec" : "生成执行计划"}
           </button>
 
-          {(serviceError || submitError || uploadError || runError) && (
+          {(serviceError || submitError) && (
             <div className="inline-error">
               <AlertTriangle size={16} aria-hidden="true" />
-              <span>{submitError || uploadError || runError || serviceError}</span>
+              <span>{submitError || serviceError}</span>
             </div>
           )}
         </form>
@@ -443,32 +289,14 @@ function App() {
             </div>
             <pre>{equivalentCli}</pre>
           </div>
-          <div className="run-actions">
-            <button className="primary-action" type="button" onClick={() => void launchRun()} disabled={!canRun || runActive}>
-              {runActive ? <Loader2 size={18} aria-hidden="true" /> : <Play size={18} aria-hidden="true" />}
-              {runActive ? "四级 CLI 运行中" : run?.status === "complete" ? "已完成，可查看结果" : "运行四级 CLI"}
-            </button>
-            {runActive ? (
-              <button className="icon-action on-dark" type="button" title="取消运行" aria-label="取消运行" onClick={() => void cancelRun()}>
-                <Square size={16} aria-hidden="true" />
-              </button>
-            ) : null}
-          </div>
-          {run ? (
-            <div className="run-status-line">
-              <span className={`state-pill ${runTone}`}>{run.status}</span>
-              <span>{run.runId}</span>
-            </div>
-          ) : null}
         </aside>
       </section>
 
       <section className="result-strip" aria-label="计划摘要">
         <Metric label="RunSpec" value={plan ? "written" : "pending"} tone={plan ? "good" : ""} />
-        <Metric label="Molecule set" value={moleculeSet ? `${formatNumber(moleculeSet.nRows)} rows` : "not attached"} tone={moleculeSet ? "good" : "warn"} />
+        <Metric label="Molecule set" value={plan?.spec.moleculeSet.attached ? "attached" : "not attached"} tone="warn" />
         <Metric label="Branch" value={plan?.route.branch || "unresolved"} tone={routeTone} />
-        <Metric label="Run" value={run?.status || "pending"} tone={run ? runTone : ""} />
-        <Metric label="Evidence" value={run?.resultSummary ? `${run.resultSummary.nRanked}/${run.resultSummary.nRows} ranked` : plan ? `${plan.bundle.files.length} files` : "pending"} />
+        <Metric label="Evidence" value={plan ? `${plan.bundle.files.length} files` : "pending"} />
       </section>
 
       <section className="results-layout">
@@ -494,22 +322,6 @@ function App() {
           ) : (
             <EmptyState title="等待 RunSpec" detail="提交 prompt 后，这里显示规范化参数和 bundle 位置。" />
           )}
-          {run?.status === "blocked" ? (
-            <div className="preflight-block">
-              <div className="section-head compact">
-                <h3>严格预检阻断</h3>
-                <span className="state-pill bad">blocked</span>
-              </div>
-              <PreflightList checks={run.preflight.checks} />
-            </div>
-          ) : null}
-          {results && run ? (
-            <ResultSummaryView
-              results={results}
-              loading={resultsLoading}
-              onPage={(view, offset) => void loadResults(run.runId, view, offset)}
-            />
-          ) : null}
         </section>
 
         <aside className="evidence-panel" aria-label="后端和证据要求">
@@ -528,24 +340,10 @@ function App() {
           <PanelBlock icon={<Activity size={18} aria-hidden="true" />} title="执行边界">
             <div className="evidence-list">
               <article className="evidence-row">
-                <span className={`state-pill ${run ? runTone : "warn"}`}>{run?.status || "plan_only"}</span>
-                <strong>{run ? "运行证据" : moleculeSet ? "等待执行" : "分子集尚未接入"}</strong>
-                <p>{run?.status === "complete" ? "结果来自本机严格四级 CLI；失败行保留在结果摘要中。" : plan?.executionBoundary || scientificBoundary}</p>
+                <span className="state-pill warn">plan_only</span>
+                <strong>分子集尚未接入</strong>
+                <p>{plan?.executionBoundary || scientificBoundary}</p>
               </article>
-              {moleculeSet ? (
-                <article className="evidence-row">
-                  <span className="state-pill good">sealed</span>
-                  <strong>{moleculeSet.moleculeSetId}</strong>
-                  <p>{formatNumber(moleculeSet.nRows)} 行 · SHA-256 {moleculeSet.inputSha256.slice(0, 16)}…</p>
-                </article>
-              ) : null}
-              {(run?.preflight.checks || []).map((check) => (
-                <article className="evidence-row" key={check.id}>
-                  <span className={`state-pill ${toneForStatus(check.status)}`}>{check.status}</span>
-                  <strong>{check.label}</strong>
-                  <p>{check.message}</p>
-                </article>
-              ))}
               {(plan?.assetRequirements || []).map((requirement) => (
                 <article className="evidence-row" key={requirement}>
                   <span className="state-pill idle">required</span>
@@ -566,9 +364,6 @@ function App() {
           <AuditBlock title="研究 prompt"><p>{prompt}</p></AuditBlock>
           <AuditBlock title="RunSpec"><pre>{JSON.stringify(plan?.spec || {}, null, 2)}</pre></AuditBlock>
           <AuditBlock title="Route"><pre>{JSON.stringify(plan?.route || {}, null, 2)}</pre></AuditBlock>
-          <AuditBlock title="MoleculeSet"><pre>{JSON.stringify(moleculeSet || {}, null, 2)}</pre></AuditBlock>
-          <AuditBlock title="Run"><pre>{JSON.stringify(run || {}, null, 2)}</pre></AuditBlock>
-          <AuditBlock title="Results"><pre>{JSON.stringify(results || {}, null, 2)}</pre></AuditBlock>
           <AuditBlock title="Bundle">
             {(plan?.bundle.files || []).map((file) => <p key={file}>{file}</p>)}
             {plan?.bundle.manifestSha256 ? <code>{plan.bundle.manifestSha256}</code> : null}
@@ -578,7 +373,7 @@ function App() {
 
       <footer className="boundary">
         <AlertTriangle size={16} aria-hidden="true" />
-        <span>{run?.status === "complete" ? "本次运行显示的是本机四级 CLI 产生的可追溯结果，不等同于生物学验证或临床结论。" : scientificBoundary}</span>
+        <span>{scientificBoundary}</span>
       </footer>
     </main>
   );
@@ -609,122 +404,6 @@ function EmptyState({ title, detail }: { title: string; detail: string }) {
       <strong>{title}</strong>
       <p>{detail}</p>
     </div>
-  );
-}
-
-function PreflightList({ checks }: { checks: ExecutionRun["preflight"]["checks"] }) {
-  return (
-    <div className="preflight-list">
-      {checks.filter((check) => check.required && check.status !== "passed").map((check) => (
-        <div className="preflight-item" key={check.id}>
-          <span className={`state-pill ${toneForStatus(check.status)}`}>{check.status}</span>
-          <span><strong>{check.label}</strong>{check.message}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function ResultSummaryView({
-  results,
-  loading,
-  onPage,
-}: {
-  results: ResultSummary;
-  loading: boolean;
-  onPage: (view: ResultView, offset: number) => void;
-}) {
-  const pageStart = results.total ? results.offset + 1 : 0;
-  const pageEnd = Math.min(results.offset + results.rows.length, results.total);
-  const canGoBack = results.offset > 0;
-  const canGoForward = results.offset + results.limit < results.total;
-  const showsFusedScore = results.rankingScoreField === "final_score_dock";
-  return (
-    <section className="result-summary" aria-label="四级结果摘要">
-      <div className="section-head compact">
-        <div>
-          <p className="eyebrow">real cli result</p>
-          <h3>结果摘要</h3>
-        </div>
-        <span className="state-pill good">{results.nRanked}/{results.nRows} ranked</span>
-      </div>
-      <div className="result-toolbar">
-        <div className="result-tabs" aria-label="结果视图">
-          <button
-            className={results.view === "ranked" ? "active" : ""}
-            type="button"
-            disabled={loading}
-            onClick={() => onPage("ranked", 0)}
-          >
-            Ranked {results.nRanked}
-          </button>
-          <button
-            className={results.view === "failed" ? "active" : ""}
-            type="button"
-            disabled={loading || results.nFailed === 0}
-            onClick={() => onPage("failed", 0)}
-          >
-            Failed {results.nFailed}
-          </button>
-        </div>
-        <div className="result-pager">
-          <button
-            type="button"
-            title="上一页"
-            aria-label="上一页"
-            disabled={loading || !canGoBack}
-            onClick={() => onPage(results.view, Math.max(0, results.offset - results.limit))}
-          >
-            <ChevronLeft size={16} aria-hidden="true" />
-          </button>
-          <span>{pageStart}-{pageEnd} / {results.total}</span>
-          <button
-            type="button"
-            title="下一页"
-            aria-label="下一页"
-            disabled={loading || !canGoForward}
-            onClick={() => onPage(results.view, results.offset + results.limit)}
-          >
-            <ChevronRight size={16} aria-hidden="true" />
-          </button>
-        </div>
-      </div>
-      <div className="result-table-wrap">
-        <table className="result-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>L1</th>
-              <th>L2</th>
-              <th>L3</th>
-              <th>L4</th>
-              <th>Base</th>
-              {showsFusedScore ? <th>Fused</th> : null}
-              <th>Gate</th>
-            </tr>
-          </thead>
-          <tbody>
-            {results.rows.map((row) => (
-              <tr key={row.id}>
-                <td><strong>{row.id}</strong><small>{row.smiles}</small></td>
-                <td>{row.layer1_status || "-"}</td>
-                <td>{row.layer2_status || "-"}</td>
-                <td>{row.layer3_status || "-"}</td>
-                <td>{row.layer4_status || "-"}</td>
-                <td>{typeof row.final_score === "number" ? row.final_score.toFixed(4) : "-"}</td>
-                {showsFusedScore ? (
-                  <td>{typeof row.final_score_dock === "number" ? row.final_score_dock.toFixed(4) : "-"}</td>
-                ) : null}
-                <td>{row.gate_status || "-"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {results.view === "failed" && !results.rows.length ? (
-        <p className="result-warning">当前运行没有失败行。</p>
-      ) : null}
-    </section>
   );
 }
 

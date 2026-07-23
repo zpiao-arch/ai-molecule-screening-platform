@@ -86,10 +86,10 @@ Layout:
 - Accessibility: `<main>` landmark, one H1, visible service state.
 
 ### RequestConsole
-- Structure: research prompt textarea, candidate-pool number input, desired candidate count input, target id, route selector, CSV upload, plan button and run button.
+- Structure: research prompt textarea, candidate-pool number input, desired candidate count input, target id, route selector, submit button.
 - Variants: ready, submitting, disabled, error.
 - States: hover, focus, loading, unavailable.
-- Backend contract: submit the prompt to `/api/prompt-plan`; parse and content-address the CSV through `/api/molecule-sets`, then attach it through `/api/runs`.
+- Backend contract: submit to `/api/task-runs` with `executionScale=production-run`, `requestedCandidateCount` and `candidateCount` from the candidate-pool control, `finalSelectionCount` from the user, and selected `models`.
 
 ### ModelSelector
 - Structure: selectable module rows with model name, backend availability, and route.
@@ -99,12 +99,12 @@ Layout:
 - Boundary: unavailable selected modules remain fail-closed and cannot synthesize fake evidence.
 
 ### LiveRunCard
-- Structure: plan id/run id, status, preflight checks, active stage, latest real metrics.
-- States: no run, queued, running, complete, failed, blocked, cancelled.
+- Structure: task id, status, progress, active stage, latest real metrics.
+- States: no run, queued, running, completed, failed, needs review.
 - Boundary: status is workflow state only, not drug efficacy.
 
 ### CandidateReport
-- Structure: headline metrics, ranked rows, SMILES, four layer statuses, final score, gate status/reason and preserved failed rows.
+- Structure: headline metrics, candidate rows, SMILES, computational score, RDKit fields, nearest control similarity.
 - Variants: empty, populated, needs review.
 - Boundary: candidate rows are computational priorities only.
 

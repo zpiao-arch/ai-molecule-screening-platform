@@ -41,11 +41,6 @@ try:
 except ImportError:  # Direct script/PYTHONPATH=scoring compatibility.
     from asset_integrity import verify_asset
 
-try:
-    from .asset_paths import resolve_asset_paths
-except ImportError:  # Direct script/PYTHONPATH=scoring compatibility.
-    from asset_paths import resolve_asset_paths
-
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # 工具函数
@@ -848,19 +843,9 @@ class MoleculeScorer:
                  default_target_text: Optional[str] = None,
                  l2_model_path: Optional[str] = None,
                  strict_backends: bool = False,
-                 unimol_device: str = "cpu",
-                 asset_root: Optional[str | Path] = None):
-        asset_paths = resolve_asset_paths(asset_root)
-        if asset_paths is not None:
-            os.environ["FOUR_LEVEL_ASSET_ROOT"] = str(asset_paths.root)
-            if asset_paths.manifest.is_file():
-                os.environ["FOUR_LEVEL_ASSET_MANIFEST"] = str(asset_paths.manifest)
-        l2_model_path = l2_model_path or (str(asset_paths.l2_model) if asset_paths is not None else None)
+                 unimol_device: str = "cpu"):
         self.l1 = Layer1Scorer()
-        self.l3 = Layer3Scorer(
-            strict_backends=strict_backends,
-            model_dir=asset_paths.admet_model_dir if asset_paths is not None else None,
-        )
+        self.l3 = Layer3Scorer(strict_backends=strict_backends)
         self.l4 = Layer4Aggregator()
         self.unimol = None
         self.l2_method = l2_method
@@ -873,10 +858,7 @@ class MoleculeScorer:
                     from .scripts.unimol_scorer import UniMolScorer
                 except ImportError:  # Direct script/PYTHONPATH=scoring compatibility.
                     from scripts.unimol_scorer import UniMolScorer
-                self.unimol = UniMolScorer(
-                    device=unimol_device,
-                    model_dir=asset_paths.unimol_model_dir if asset_paths is not None else None,
-                )
+                self.unimol = UniMolScorer(device=unimol_device)
             except Exception as e:
                 if strict_backends:
                     raise RuntimeError(f"L4 UniMol 加载失败: {e}") from e
@@ -891,11 +873,7 @@ class MoleculeScorer:
                         from .l2_bindingdb import Layer2BindingDB
                     except ImportError:  # Direct script/PYTHONPATH=scoring compatibility.
                         from l2_bindingdb import Layer2BindingDB
-                    self.l2 = Layer2BindingDB(
-                        prefer="mlp",
-                        model_path=l2_model_path,
-                        params_path=(str(asset_paths.l2_params) if asset_paths is not None else None),
-                    )
+                    self.l2 = Layer2BindingDB(prefer="mlp", model_path=l2_model_path)
                     print(f"L2: BindingDB 靶点感知模型(靶点哈希, 权重0.50, 模型={self.l2.model_kind})"
                           + (f" [覆盖={os.path.basename(l2_model_path)}]" if l2_model_path else ""))
                 else:
@@ -1207,14 +1185,7 @@ def main():
                         help="级联分支仅对 L2 粗筛前 N 个候选运行结构对接 (默认300)")
     parser.add_argument("--strict-backends", action="store_true",
                         help="任一四级后端加载或分子评分失败时立即退出，不允许静默降级")
-    parser.add_argument("--asset-root", default=None,
-                        help="外部离线资产根目录 (含 ASSET_MANIFEST.json、scoring/models 和 scoring/receptors)")
     args = parser.parse_args()
-
-    if args.asset_root:
-        configured_assets = resolve_asset_paths(args.asset_root)
-        os.environ["FOUR_LEVEL_ASSET_ROOT"] = str(configured_assets.root)
-        os.environ["FOUR_LEVEL_ASSET_MANIFEST"] = str(configured_assets.manifest)
 
     if args.mode == "library":
         conflicts = [
@@ -1328,7 +1299,6 @@ def main():
         default_target_text=default_tt,
         l2_model_path=decision.get("l2_model_path"),
         strict_backends=args.strict_backends,
-        asset_root=args.asset_root,
     )
 
     # 先完成四级粗筛，级联只对 L2 top-N 运行结构对接。

@@ -24,13 +24,9 @@ except ImportError:  # PYTHONPATH=scoring compatibility.
 
 
 # 从文件加载FDA批准药物参考集
-def _load_drugbank_refs(model_dir=None):
+def _load_drugbank_refs():
     """加载FDA批准药物参考集"""
-    ref_path = (
-        Path(model_dir).expanduser().resolve() / "drugbank_ref.txt"
-        if model_dir is not None
-        else Path(__file__).parent.parent / "models" / "drugbank_ref.txt"
-    )
+    ref_path = Path(__file__).parent.parent / "models" / "drugbank_ref.txt"
     drugs = []
     if ref_path.exists():
         for line in ref_path.read_text(encoding="utf-8").split("\n"):
@@ -75,17 +71,12 @@ TOXIC_REFS = [
 class UniMolScorer:
     """Uni-Mol零-shot评分器"""
 
-    def __init__(self, device: str = "cuda", multi_process: bool = False, model_dir=None):
-        BASE = (
-            Path(model_dir).expanduser().resolve()
-            if model_dir is not None
-            else Path(__file__).parent.parent / "models"
-        )
-        self.model_dir = BASE
+    def __init__(self, device: str = "cuda", multi_process: bool = False):
+        BASE = Path(__file__).parent.parent  # scripts/ → 评分/
 
         # 尝试加载缓存
-        cache_path = BASE / "ref_embeddings.npz"
-        smiles_cache = BASE / "ref_smiles.pkl"
+        cache_path = BASE / "models/ref_embeddings.npz"
+        smiles_cache = BASE / "models/ref_smiles.pkl"
 
         if cache_path.exists() and smiles_cache.exists():
             # 从缓存加载 (秒级)
@@ -115,14 +106,14 @@ class UniMolScorer:
 
         else:
             # 实时计算 (首次)
-            WEIGHTS = BASE / "unimol/models--dptech--Uni-Mol-Models/snapshots/9f19c45c718192888a1c8a1c905f69f0755ea502"
+            WEIGHTS = BASE / "models/unimol/models--dptech--Uni-Mol-Models/snapshots/9f19c45c718192888a1c8a1c905f69f0755ea502"
             self.extractor = UniMolEmbedding(
                 weights_path=str(WEIGHTS / "mol_pre_all_h_220816.pt"),
                 dict_path=str(WEIGHTS / "mol.dict.txt"),
                 device=device,
             )
 
-            fda_drugs = _load_drugbank_refs(BASE)
+            fda_drugs = _load_drugbank_refs()
             self.ref_smiles = {}
             self.ref_labels = {}
             for name, smi in fda_drugs:
@@ -148,8 +139,8 @@ class UniMolScorer:
 
     def _get_extractor(self):
         if self.extractor is None:
-            BASE = self.model_dir
-            WEIGHTS = BASE / "unimol/models--dptech--Uni-Mol-Models/snapshots/9f19c45c718192888a1c8a1c905f69f0755ea502"
+            BASE = Path(__file__).parent.parent
+            WEIGHTS = BASE / "models/unimol/models--dptech--Uni-Mol-Models/snapshots/9f19c45c718192888a1c8a1c905f69f0755ea502"
             self.extractor = UniMolEmbedding(
                 weights_path=str(WEIGHTS / "mol_pre_all_h_220816.pt"),
                 dict_path=str(WEIGHTS / "mol.dict.txt"),
