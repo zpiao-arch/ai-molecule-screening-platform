@@ -37,7 +37,9 @@ def _resolved_entry(entry: dict) -> dict:
     resolved = dict(entry)
     receptor = Path(str(resolved.get("pdbqt", "")))
     if not receptor.is_absolute():
-        receptor = (REGISTRY_PATH.parent / receptor).resolve()
+        external_root = os.environ.get("FOUR_LEVEL_ASSET_ROOT", "").strip()
+        external = (Path(external_root).expanduser() / "scoring" / receptor).resolve() if external_root else None
+        receptor = external if external is not None and external.is_file() else (REGISTRY_PATH.parent / receptor).resolve()
     resolved["pdbqt"] = str(receptor)
     return resolved
 

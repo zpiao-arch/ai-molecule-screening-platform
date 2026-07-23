@@ -41,6 +41,15 @@ def _load_asset_integrity():
     return module
 
 
+def _load_module_from_file(name: str, module_path: Path):
+    spec = importlib.util.spec_from_file_location(name, module_path)
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
 def _write_asset_manifest(root: Path, relative: str, digest: str) -> Path:
     manifest = root / "ASSET_MANIFEST.json"
     manifest.write_text(
@@ -219,6 +228,250 @@ def _import_scoring_modules():
     import scoring
 
     return pipeline_router, scoring
+
+
+def test_asset_root_resolves_external_model_directories(tmp_path):
+    asset_paths = _load_module_from_file("four_level_asset_paths_injected", SCORING_DIR / "asset_paths.py")
+
+    model_root = tmp_path / "scoring" / "models"
+    l2_dir = model_root / "bindingdb_l2"
+    l2_dir.mkdir(parents=True)
+    compat_model = l2_dir / "l2_model_sklearn_1_7_2.joblib"
+    compat_model.write_bytes(b"compat")
+    (l2_dir / "l2_model.joblib").write_bytes(b"fallback")
+    (tmp_path / "ASSET_MANIFEST.json").write_text("{}\n", encoding="utf-8")
+
+    paths = asset_paths.resolve_asset_paths(tmp_path)
+
+    assert paths is not None
+    assert paths.root == tmp_path.resolve()
+    assert paths.manifest == (tmp_path / "ASSET_MANIFEST.json").resolve()
+    assert paths.model_root == model_root.resolve()
+    assert paths.l2_model == compat_model.resolve()
+    assert paths.admet_model_dir == (model_root / "admet").resolve()
+    assert paths.unimol_model_dir == model_root.resolve()
+    assert paths.receptor_root == (tmp_path / "scoring" / "receptors").resolve()
+
+
+def test_router_resolves_relative_receptor_from_external_asset_root(monkeypatch, tmp_path):
+    pipeline_router, _ = _import_scoring_modules()
+    registry = tmp_path / "source" / "scoring" / "receptor_registry.json"
+    registry.parent.mkdir(parents=True)
+    registry.write_text(
+        json.dumps(
+            {
+                "entries": {
+                    "CHEMBL2051": {
+                        "target_name": "Neuraminidase",
+                        "pdbqt": "receptors/test.pdbqt",
+                        "box_center": [1, 2, 3],
+                        "box_size": [20, 20, 20],
+                    }
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+    receptor = tmp_path / "assets" / "scoring" / "receptors" / "test.pdbqt"
+    receptor.parent.mkdir(parents=True)
+    receptor.write_text("RECEPTOR\n", encoding="utf-8")
+    monkeypatch.setattr(pipeline_router, "REGISTRY_PATH", registry)
+    monkeypatch.setenv("FOUR_LEVEL_ASSET_ROOT", str(tmp_path / "assets"))
+
+    decision = pipeline_router.route("CHEMBL2051", chembl_id="CHEMBL2051")
+
+    assert decision["branch"] == "cascade"
+    assert decision["receptor"] == str(receptor.resolve())
+
+
+def test_molecule_scorer_threads_external_asset_paths(monkeypatch, tmp_path):
+    scoring = _load_module_from_file("four_level_scoring_asset_injected", SCORING_DIR / "scoring.py")
+    import l2_bindingdb
+
+    captured = {}
+
+    class FakeLayer3:
+        def __init__(self, **kwargs):
+            captured["l3"] = kwargs
+
+    class FakeLayer2:
+        model_kind = "fake"
+
+        def __init__(self, **kwargs):
+            captured["l2"] = kwargs
+
+    monkeypatch.setattr(scoring, "Layer3Scorer", FakeLayer3)
+    monkeypatch.setattr(l2_bindingdb, "Layer2BindingDB", FakeLayer2)
+
+    scorer = scoring.MoleculeScorer(asset_root=tmp_path, use_unimol=False)
+
+    assert captured["l3"]["model_dir"] == tmp_path / "scoring" / "models" / "admet"
+    assert captured["l2"]["model_path"] == str(
+        tmp_path / "scoring" / "models" / "bindingdb_l2" / "l2_model.joblib"
+    )
+
+
+def test_unimol_uses_injected_model_directory(tmp_path, monkeypatch):
+    import pickle
+
+    unimol_scorer = _load_module_from_file(
+        "four_level_unimol_scorer_injected",
+        SCORING_DIR / "scripts" / "unimol_scorer.py",
+    )
+
+    model_dir = tmp_path / "scoring" / "models"
+    model_dir.mkdir(parents=True)
+    embeddings = model_dir / "ref_embeddings.npz"
+    smiles = model_dir / "ref_smiles.pkl"
+    np.savez(embeddings, embeddings=np.ones((2, 4), dtype=np.float32))
+    smiles.write_bytes(pickle.dumps(["CCO", "CCN"]))
+    integrity = _load_asset_integrity()
+    manifest = {
+        "schema": "test",
+        "files": {
+            "scoring/models/ref_embeddings.npz": integrity.sha256_file(embeddings),
+            "scoring/models/ref_smiles.pkl": integrity.sha256_file(smiles),
+        },
+    }
+    (tmp_path / "ASSET_MANIFEST.json").write_text(json.dumps(manifest), encoding="utf-8")
+    monkeypatch.setenv("FOUR_LEVEL_ASSET_MANIFEST", str(tmp_path / "ASSET_MANIFEST.json"))
+
+    scorer = unimol_scorer.UniMolScorer(device="cpu", model_dir=model_dir)
+
+    assert scorer.model_dir == model_dir.resolve()
+    assert scorer.ref_embeddings.shape == (2, 4)
+    assert scorer.ref_names == ["FDA_1", "FDA_2"]
+
+
+def test_scoring_help_exposes_asset_root():
+    result = subprocess.run(
+        [sys.executable, str(SCORING_DIR / "scoring.py"), "--help"],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+
+    assert result.returncode == 0
+    assert "--asset-root" in result.stdout
+
+
+def _write_base_scores(path: Path, rows: list[tuple[str, str]]) -> Path:
+    frame = pd.DataFrame([
+        {
+            "id": mol_id,
+            "smiles": smiles,
+            "layer1_status": "ok",
+            "layer2_status": "ok",
+            "layer3_status": "ok",
+            "layer4_status": "ok",
+            "docking_normalized": 0.2 + index * 0.1,
+            "final_score": 0.4 + index * 0.1,
+        }
+        for index, (mol_id, smiles) in enumerate(rows)
+    ])
+    frame.to_csv(path, index=False)
+    return path
+
+
+def test_read_base_scores_requires_exact_input_identity(tmp_path):
+    _, scoring = _import_scoring_modules()
+    expected = [("mol-1", "CCO"), ("mol-2", "CCN")]
+    base = _write_base_scores(tmp_path / "base.csv", expected[:1])
+
+    with pytest.raises(ValueError, match="identity mismatch"):
+        scoring.read_base_scores_csv(base, expected)
+
+
+def test_read_base_scores_rejects_smiles_mutation(tmp_path):
+    _, scoring = _import_scoring_modules()
+    base = _write_base_scores(tmp_path / "base.csv", [("mol-1", "CCC")])
+
+    with pytest.raises(ValueError, match="identity mismatch"):
+        scoring.read_base_scores_csv(base, [("mol-1", "CCO")])
+
+
+def test_validate_base_columns_rejects_docking_mutation():
+    _, scoring = _import_scoring_modules()
+    before = [{"id": "mol-1", "smiles": "CCO", "final_score": 0.4}]
+    after = [{
+        "id": "mol-1",
+        "smiles": "CCO",
+        "final_score": 0.5,
+        "final_score_dock": 0.6,
+    }]
+
+    with pytest.raises(ValueError, match="base score mutated"):
+        scoring.validate_base_columns_unchanged(before, after)
+
+
+def test_load_or_score_results_skips_scorer_for_base_scores(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+
+    _, scoring = _import_scoring_modules()
+    base = _write_base_scores(tmp_path / "base.csv", [("mol-1", "CCO")])
+
+    class ForbiddenScorer:
+        def __init__(self, **kwargs):
+            del kwargs
+            raise AssertionError("scorer initialized")
+
+    monkeypatch.setattr(scoring, "MoleculeScorer", ForbiddenScorer)
+    args = SimpleNamespace(
+        base_scores=str(base),
+        target="CHEMBL2051",
+        target_seq=None,
+        l2="bindingdb",
+        strict_backends=True,
+        asset_root=None,
+    )
+
+    rows, snapshot = scoring.load_or_score_results(
+        args,
+        [("mol-1", "CCO")],
+        {"l2_model_path": None},
+        "Neuraminidase",
+    )
+
+    assert rows == snapshot
+    assert rows[0]["final_score"] == 0.4
+
+
+def test_scoring_help_exposes_base_scores():
+    result = subprocess.run(
+        [sys.executable, str(SCORING_DIR / "scoring.py"), "--help"],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+
+    assert result.returncode == 0
+    assert "--base-scores" in result.stdout
+
+
+def test_open_molecule_bridge_counts_complete_structure_docking_success(tmp_path):
+    bridge = _load_module_from_file(
+        "open_molecule_python_bridge",
+        ROOT / "apps" / "open-molecule-lab" / "server" / "python-bridge.py",
+    )
+    result_path = tmp_path / "scores.csv"
+    pd.DataFrame(
+        {
+            "id": ["mol-1", "mol-2", "mol-3"],
+            "smiles": ["CCO", "CCN", "CCC"],
+            "layer1_status": ["ok", "ok", "ok"],
+            "layer2_status": ["ok", "ok", "ok"],
+            "layer3_status": ["ok", "ok", "ok"],
+            "layer4_status": ["ok", "ok", "ok"],
+            "final_score": [0.7, 0.6, 0.5],
+            "structure_docking_status": ["ok", "prep_failed", "ok"],
+            "final_score_dock": [0.9, 0.6, 0.8],
+        }
+    ).to_csv(result_path, index=False)
+
+    summary = bridge.summarize_results(result_path)
+
+    assert summary["structureDockingOk"] == 2
+    assert summary["rankingScoreField"] == "final_score_dock"
 
 
 def test_molecule_scorer_defaults_to_packaged_bindingdb_backend():

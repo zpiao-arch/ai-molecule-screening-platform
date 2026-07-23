@@ -86,10 +86,10 @@ Layout:
 - Accessibility: `<main>` landmark, one H1, visible service state.
 
 ### RequestConsole
-- Structure: research prompt textarea, candidate-pool number input, desired candidate count input, target id, route selector, submit button.
+- Structure: research prompt textarea, candidate-pool number input, desired candidate count input, target id, route selector, CSV upload, plan button and run button.
 - Variants: ready, submitting, disabled, error.
 - States: hover, focus, loading, unavailable.
-- Backend contract: submit to `/api/task-runs` with `executionScale=production-run`, `requestedCandidateCount` and `candidateCount` from the candidate-pool control, `finalSelectionCount` from the user, and selected `models`.
+- Backend contract: submit the prompt to `/api/prompt-plan`; parse and content-address the CSV through `/api/molecule-sets`, then attach it through `/api/runs`.
 
 ### ModelSelector
 - Structure: selectable module rows with model name, backend availability, and route.
@@ -99,12 +99,13 @@ Layout:
 - Boundary: unavailable selected modules remain fail-closed and cannot synthesize fake evidence.
 
 ### LiveRunCard
-- Structure: task id, status, progress, active stage, latest real metrics.
-- States: no run, queued, running, completed, failed, needs review.
+- Structure: plan id/run id, status, preflight checks, persisted prepare/score/dock/report rows, attempt count, timestamps, terminal error code, and latest real metrics.
+- States: no run, queued, running, complete, failed, blocked, cancelled.
+- Resume: show the `RotateCcw` command only when the stage API reports `resumable`; never infer resumability from elapsed time or log text.
 - Boundary: status is workflow state only, not drug efficacy.
 
 ### CandidateReport
-- Structure: headline metrics, candidate rows, SMILES, computational score, RDKit fields, nearest control similarity.
+- Structure: headline metrics, ranked rows, SMILES, four layer statuses, final score, gate status/reason and preserved failed rows.
 - Variants: empty, populated, needs review.
 - Boundary: candidate rows are computational priorities only.
 
@@ -137,3 +138,11 @@ Strategy: warm paper surfaces with subtle borders and small shadows.
 | Inverted | dark ink surface | Live run emphasis |
 
 No nested card stacks. Use framed surfaces only for the request console, result report, candidate rows, and audit details.
+
+## 8. Verified Stage Resume
+
+- The UI renders `GET /api/runs/:id/stages` after launch and on every run poll; planned rows are used only before launch.
+- Library displays dock as `skipped`; cascade requires a complete dock attempt with at least one real structure-docking success.
+- Resume uses the same run ID and immutable RunSpec. It appends an attempt only after manifest, input, asset, code, upstream checkpoint and output hashes match.
+- `checkpoint_mismatch` is terminal `blocked` evidence. The UI displays the persisted stage/error code and never estimates a percentage.
+- Recovery is stage-boundary recovery. Mid-model and mid-docking process state are intentionally outside the product contract.

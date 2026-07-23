@@ -1,7 +1,7 @@
 # Open Molecule Lab 产品设计规格
 
 日期：2026-07-22  
-状态：待用户审阅  
+状态：已批准  
 产品名：Open Molecule Lab（暂名）
 
 ## 1. 产品定位

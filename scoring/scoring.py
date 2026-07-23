@@ -41,6 +41,11 @@ try:
 except ImportError:  # Direct script/PYTHONPATH=scoring compatibility.
     from asset_integrity import verify_asset
 
+try:
+    from .asset_paths import resolve_asset_paths
+except ImportError:  # Direct script/PYTHONPATH=scoring compatibility.
+    from asset_paths import resolve_asset_paths
+
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # 工具函数
@@ -843,9 +848,19 @@ class MoleculeScorer:
                  default_target_text: Optional[str] = None,
                  l2_model_path: Optional[str] = None,
                  strict_backends: bool = False,
-                 unimol_device: str = "cpu"):
+                 unimol_device: str = "cpu",
+                 asset_root: Optional[str | Path] = None):
+        asset_paths = resolve_asset_paths(asset_root)
+        if asset_paths is not None:
+            os.environ["FOUR_LEVEL_ASSET_ROOT"] = str(asset_paths.root)
+            if asset_paths.manifest.is_file():
+                os.environ["FOUR_LEVEL_ASSET_MANIFEST"] = str(asset_paths.manifest)
+        l2_model_path = l2_model_path or (str(asset_paths.l2_model) if asset_paths is not None else None)
         self.l1 = Layer1Scorer()
-        self.l3 = Layer3Scorer(strict_backends=strict_backends)
+        self.l3 = Layer3Scorer(
+            strict_backends=strict_backends,
+            model_dir=asset_paths.admet_model_dir if asset_paths is not None else None,
+        )
         self.l4 = Layer4Aggregator()
         self.unimol = None
         self.l2_method = l2_method
@@ -858,7 +873,10 @@ class MoleculeScorer:
                     from .scripts.unimol_scorer import UniMolScorer
                 except ImportError:  # Direct script/PYTHONPATH=scoring compatibility.
                     from scripts.unimol_scorer import UniMolScorer
-                self.unimol = UniMolScorer(device=unimol_device)
+                self.unimol = UniMolScorer(
+                    device=unimol_device,
+                    model_dir=asset_paths.unimol_model_dir if asset_paths is not None else None,
+                )
             except Exception as e:
                 if strict_backends:
                     raise RuntimeError(f"L4 UniMol 加载失败: {e}") from e
@@ -873,7 +891,11 @@ class MoleculeScorer:
                         from .l2_bindingdb import Layer2BindingDB
                     except ImportError:  # Direct script/PYTHONPATH=scoring compatibility.
                         from l2_bindingdb import Layer2BindingDB
-                    self.l2 = Layer2BindingDB(prefer="mlp", model_path=l2_model_path)
+                    self.l2 = Layer2BindingDB(
+                        prefer="mlp",
+                        model_path=l2_model_path,
+                        params_path=(str(asset_paths.l2_params) if asset_paths is not None else None),
+                    )
                     print(f"L2: BindingDB 靶点感知模型(靶点哈希, 权重0.50, 模型={self.l2.model_kind})"
                           + (f" [覆盖={os.path.basename(l2_model_path)}]" if l2_model_path else ""))
                 else:
@@ -1090,6 +1112,87 @@ def read_molecules_csv(path: str | Path) -> List[Tuple[str, str]]:
     return molecules
 
 
+BASE_REQUIRED_COLUMNS = {
+    "id",
+    "smiles",
+    "layer1_status",
+    "layer2_status",
+    "layer3_status",
+    "layer4_status",
+    "docking_normalized",
+    "final_score",
+}
+
+DOCKING_APPEND_COLUMNS = {
+    "docking_affinity_kcal_mol",
+    "heavy_atoms",
+    "ligand_efficiency",
+    "dock_rerank_rank",
+    "structure_docking_status",
+    "dock_le_norm",
+    "final_score_dock",
+}
+
+
+def read_base_scores_csv(
+    path: str | Path,
+    expected: List[Tuple[str, str]],
+) -> List[Dict]:
+    import pandas as pd
+
+    frame = pd.read_csv(path, dtype={"id": "string", "smiles": "string"})
+    missing = sorted(BASE_REQUIRED_COLUMNS - set(frame.columns))
+    if missing:
+        raise ValueError(f"base scores missing required columns: {', '.join(missing)}")
+    if frame["id"].isna().any() or frame["smiles"].isna().any():
+        raise ValueError("base scores contain blank id/smiles values")
+    ids = frame["id"].astype(str)
+    if ids.duplicated().any():
+        raise ValueError("base scores contain duplicate ids")
+    expected_map = dict(expected)
+    actual_map = dict(zip(ids, frame["smiles"].astype(str), strict=True))
+    if len(frame) != len(expected) or actual_map != expected_map:
+        raise ValueError("base score identity mismatch")
+
+    records = []
+    for record in frame.to_dict(orient="records"):
+        records.append({
+            str(key): None if pd.isna(value) else value.item() if hasattr(value, "item") else value
+            for key, value in record.items()
+        })
+    return records
+
+
+def validate_base_columns_unchanged(before: List[Dict], after: List[Dict]) -> None:
+    before_by_id = {str(row["id"]): row for row in before}
+    after_by_id = {str(row["id"]): row for row in after}
+    if before_by_id.keys() != after_by_id.keys():
+        raise ValueError("base score mutated: molecule ids changed")
+    for mol_id, original in before_by_id.items():
+        current = after_by_id[mol_id]
+        for key, value in original.items():
+            if key in DOCKING_APPEND_COLUMNS:
+                continue
+            if current.get(key) != value:
+                raise ValueError(f"base score mutated: {mol_id}.{key}")
+
+
+def load_or_score_results(args, rows, decision, default_target_text):
+    if getattr(args, "base_scores", None):
+        loaded = read_base_scores_csv(args.base_scores, rows)
+        return loaded, [dict(row) for row in loaded]
+    scorer = MoleculeScorer(
+        deeppurpose_target=args.target,
+        deeppurpose_target_seq=args.target_seq,
+        l2_method=args.l2,
+        default_target_text=default_target_text,
+        l2_model_path=decision.get("l2_model_path"),
+        strict_backends=args.strict_backends,
+        asset_root=args.asset_root,
+    )
+    return scorer.score_batch(rows), None
+
+
 def _parse_docking_triplet(value: str, *, name: str, positive: bool = False) -> Tuple[float, float, float]:
     try:
         parsed = tuple(float(item.strip()) for item in value.split(","))
@@ -1185,7 +1288,21 @@ def main():
                         help="级联分支仅对 L2 粗筛前 N 个候选运行结构对接 (默认300)")
     parser.add_argument("--strict-backends", action="store_true",
                         help="任一四级后端加载或分子评分失败时立即退出，不允许静默降级")
+    parser.add_argument("--asset-root", default=None,
+                        help="外部离线资产根目录 (含 ASSET_MANIFEST.json、scoring/models 和 scoring/receptors)")
+    parser.add_argument("--base-scores", default=None,
+                        help="已验证的 L1-L4 基础结果 CSV；仅 cascade 阶段使用并跳过 L1-L4 重算")
     args = parser.parse_args()
+
+    if args.base_scores and args.mode != "cascade":
+        parser.error("--base-scores 仅允许与 --mode cascade 一起使用")
+    if args.base_scores and Path(args.base_scores).resolve() == Path(args.output).resolve():
+        parser.error("--base-scores 与 --output 必须是不同文件")
+
+    if args.asset_root:
+        configured_assets = resolve_asset_paths(args.asset_root)
+        os.environ["FOUR_LEVEL_ASSET_ROOT"] = str(configured_assets.root)
+        os.environ["FOUR_LEVEL_ASSET_MANIFEST"] = str(configured_assets.manifest)
 
     if args.mode == "library":
         conflicts = [
@@ -1292,17 +1409,8 @@ def main():
     except ValueError as exc:
         parser.error(str(exc))
 
-    scorer = MoleculeScorer(
-        deeppurpose_target=args.target,
-        deeppurpose_target_seq=args.target_seq,
-        l2_method=args.l2,
-        default_target_text=default_tt,
-        l2_model_path=decision.get("l2_model_path"),
-        strict_backends=args.strict_backends,
-    )
-
     # 先完成四级粗筛，级联只对 L2 top-N 运行结构对接。
-    results = scorer.score_batch(rows)
+    results, base_snapshot = load_or_score_results(args, rows, decision, default_tt)
     l2_scores = {r["id"]: float(r.get("docking_normalized", 0.0) or 0.0) for r in results}
 
     # ---- 可选 对接腿 (smina + obabel, 配体效率LE校正) ----
@@ -1389,11 +1497,13 @@ def main():
             rerank_sorted = sorted([r for r in results if r.get("dock_rerank_rank") is not None],
                                    key=lambda x: x["dock_rerank_rank"])
             rerank_out = os.path.splitext(args.output)[0] + "_reranked.csv"
-            scorer.save_csv(rerank_sorted, rerank_out)
+            MoleculeScorer.save_csv(rerank_sorted, rerank_out)
 
     # 输出主 CSV；启用融合时保留 base 分并按 final_score_dock 排序。
-    scorer.save_csv(results, args.output)
-    scorer.print_ranking(results)
+    if base_snapshot is not None:
+        validate_base_columns_unchanged(base_snapshot, results)
+    MoleculeScorer.save_csv(results, args.output)
+    MoleculeScorer.print_ranking(results)
 
     # 对接精排 Top 榜单
     if args.dock_rerank and dock_map and args.receptor:

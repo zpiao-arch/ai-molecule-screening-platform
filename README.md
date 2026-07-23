@@ -10,7 +10,9 @@
 
 `../four-level-molecule-cli-offline-assets`
 
-把离线资产包解压并合并到源码包根目录后，目录应包含 `scoring/models/`、根目录 `data/` 和 `scoring/receptors/`。源码包自带的 `scoring/data/` 只是小型案例输入，不能替代根目录的完整 benchmark 数据。smina/obabel 是平台相关二进制，不随资产包分发，需自行安装并设置 `DOCK_BIN_DIR`，也可分别设置 `SMINA_BIN` 和 `OBABEL_BIN`。legacy 行级数据不随 GitHub 源码归档分发，见 [THIRD_PARTY_DATA.md](THIRD_PARTY_DATA.md)。
+运行 CLI 时可通过 `--asset-root /path/to/offline-assets` 显式指向离线资产根；不要把权重、受体或二进制复制进源码包。源码包自带的 `scoring/data/` 只是小型案例输入，不能替代完整 benchmark 数据。smina/obabel 是平台相关二进制，不随资产包分发，需自行安装并设置 `DOCK_BIN_DIR`，也可分别设置 `SMINA_BIN` 和 `OBABEL_BIN`。legacy 行级数据不随 GitHub 源码归档分发，见 [THIRD_PARTY_DATA.md](THIRD_PARTY_DATA.md)。
+
+源码包同时包含 prompt-first 的 [Open Molecule Lab](apps/open-molecule-lab/)。它可以在本机上传 `id,smiles` CSV、执行严格预检、按不可变 `prepare/score/dock/report` StageAttempt 调用现有四级 CLI，并从最后一个哈希验证通过的阶段边界显式恢复。缺少外部资产或 checkpoint 不匹配时运行会 `blocked`，不会生成假分数或静默重算。
 
 完整文件盘点见 [FULL_SOURCE_INVENTORY.md](FULL_SOURCE_INVENTORY.md)。`legacy/multitarget_benchmark/` 是历史实验和诊断脚本归档，不是当前 1000×10000 CLI 的必要运行路径。
 
@@ -20,9 +22,21 @@
 - L1/L2/L3/L4 failure 均为 `0`，fit-pair contamination 为 `0`。
 - 正式 CLI 与批量路径的 20 分子等价性复核最大差为 `0`，容差 `1e-4`。
 - CHEMBL2051 的 top-300 对接包含逐分子状态、affinity、ligand efficiency 和命令参数。
-- 冻结运行基线测试：`43 passed`；当前 source-only 默认测试：`92 passed, 10 deselected`；合并离线资产并配置 smina/obabel 后完整本机套件：`102 passed`。测试标记和运行命令见下文。
+- 冻结运行基线测试：`43 passed`；当前 source-only 默认测试：`103 passed, 10 deselected`；Open Molecule Lab source-only/stage/worker contracts、前端 build，以及真实 library、八分子 smina cascade、中断恢复等价和篡改阻断均在发布前重新验证。测试标记和运行命令见下文。
 
 结果的统计边界见 [VALIDATION.md](VALIDATION.md)，compact snapshot 的证据在 [validation/frozen_run](validation/frozen_run) 中。运行 `python -m scientific_validation.four_level_cli_1kx10k.verify_snapshot --snapshot-dir validation/frozen_run` 验证源码包快照；完整 1 GB 本机 run 仍使用 `verify_run --strict`。pair-heldout 结果不是冷靶点、冷分子、时间外推或湿实验验证；当前受体注册表只有 CHEMBL2051。
+
+Open Molecule Lab 的真实本机阶段恢复检查：
+
+```bash
+OPEN_MOLECULE_PYTHON=/path/to/python3.11 \
+OPEN_MOLECULE_ASSET_ROOT=/path/to/four-level-molecule-cli-offline-assets \
+SMINA_BIN=/path/to/smina \
+OBABEL_BIN=/path/to/obabel \
+npm --prefix apps/open-molecule-lab run real-run-check
+```
+
+交互运行只承诺完整阶段边界恢复，不承诺恢复 Python、RDKit、UniMol 或 smina 子进程的内存状态。`POST /api/runs/:id/resume` 会重新验证 RunSpec、输入、资产、代码身份、上游 checkpoint 和输出哈希；任一变化都会 `blocked/checkpoint_mismatch`。
 
 ## 环境
 
@@ -35,10 +49,12 @@ python -m pip install .
 python -m pip install pytest
 ```
 
-合并离线资产后先检查资产：
+离线资产就位后先检查资产：
 
 ```bash
-python scripts/verify_assets.py --asset-root .
+python scripts/verify_assets.py \
+  --asset-root ../four-level-molecule-cli-offline-assets \
+  --manifest ../four-level-molecule-cli-offline-assets/ASSET_MANIFEST.json
 ```
 
 安装后也可直接使用 `four-level-molecule`, `four-level-benchmark`, `four-level-doctor` 和 `four-level-verify-snapshot` 四个命令；未安装时保留 `PYTHONPATH=scoring python scoring/scoring.py` 的脚本用法。
@@ -56,6 +72,7 @@ python -m scientific_validation.four_level_cli_1kx10k.runtime_doctor \
 PYTHONPATH=scoring python scoring/scoring.py \
   --input examples/hiv_candidates.csv \
   --target HIV-1_protease \
+  --asset-root ../four-level-molecule-cli-offline-assets \
   --strict-backends \
   --output outputs/hiv_scores.csv
 ```

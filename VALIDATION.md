@@ -27,6 +27,23 @@ The release hardening regression suite additionally verifies explicit zero fusio
 
 ## Scientific interpretation
 
+## Open Molecule Lab verified-resume validation (2026-07-23)
+
+The source-only API contract passed CSV BOM/duplicate/blank/oversize cases, exact input/result identity checks, fused-score ranked/failed pagination, invalid pagination rejection, manifest-tamper rejection, stage summary/resume status codes, and fail-closed resume preflight. The stage contract check covered canonical fingerprints, runtime code identity, immutable attempt numbering, terminal-state protection, store-computed output hashes, contiguous stage selection and output tamper detection. The worker lifecycle check rejected an unrelated persisted PID, terminated a worker and its spawned child process, proved cascade score/dock command separation, proved library dock skipping, and waited for both attempt and run cancellation persistence.
+
+With the local Python 3.11 environment, companion offline asset manifest (18 files), and explicit smina/obabel paths, `real-run-check` produced these observed chains:
+
+| Case | Stage evidence |
+|---|---|
+| Two-row library | prepare 1 complete; score 1 complete; dock skipped; report 1 complete |
+| Eight-row uninterrupted cascade | prepare/score/dock/report each complete on attempt 1 |
+| Eight-row interrupted and resumed cascade | score remained attempt 1 byte-identical; cancelled dock attempt 1 was preserved; dock attempt 2 and report attempt 1 completed |
+| Tampered score output | resume returned HTTP 409 `blocked/checkpoint_mismatch` at score; no new dock attempt; no run-owned smina process |
+
+The resumed and uninterrupted cascade `results/scores.csv` files matched for all columns after ID ordering; numeric comparison used absolute tolerance `1e-4` and reported no mismatches. Both exposed `final_score_dock`, retained the base score, and contained real `structure_docking_status=ok` rows. Completed manifests were rechecked, and all public JSON/JSONL/log/Markdown evidence was scanned for source-root, asset-root and run-root path leakage. Desktop 1440×1000 and mobile 390×844 browser checks found four persisted stage rows, no horizontal overflow, no stage overlap and no button-text overflow.
+
+This is an engineering integration check, not a new scientific benchmark or efficacy validation. The smoke fixtures do not support performance claims.
+
 The strict labeled tier contains 167 targets. L2 AUC median is 0.870833 and four-level AUC median is 0.850694. Top-1% recall medians are both 0; means are 0.019064 (L2) and 0.040870 (four-level). These are pair-heldout measurements with an unlabeled background, not confirmed-negative or cold-start estimates.
 
 Only CHEMBL2051 has a registered receptor. Its L2 top-300 docking produced 157 `ok`, 82 `skipped_hac`, 39 `dock_timeout`, 21 `dock_no_score`, and 1 `prep_timeout`. Fusion AUC was 0.844444, equal to the pre-docking L2 AUC. The historical 0.935 value is not a generalization claim for this run.

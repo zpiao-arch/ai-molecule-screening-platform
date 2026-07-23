@@ -1,6 +1,6 @@
 {
   "name": "open-molecule-lab",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,6 +8,9 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 0.0.0.0",
     "contract-check": "node server/contract-check.mjs",
+    "stage-contract-check": "node server/stage-contract-check.mjs",
+    "worker-lifecycle-check": "node server/worker-lifecycle-check.mjs",
+    "real-run-check": "node server/real-run-check.mjs",
     "serve": "node server/server.mjs"
   },
   "dependencies": {
