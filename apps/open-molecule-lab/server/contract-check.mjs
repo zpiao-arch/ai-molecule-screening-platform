@@ -1,4 +1,5 @@
-import { spawn } from "node:child_process";
+import { createHash } from "node:crypto";
+import { spawn, spawnSync } from "node:child_process";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -8,6 +9,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const appRoot = path.resolve(__dirname, "..");
 const sourceRoot = path.resolve(appRoot, "..", "..");
 const workspacePython = path.resolve(sourceRoot, "..", "..", ".venv_four_level_cli", "bin", "python");
+const runtimePython = process.env.OPEN_MOLECULE_PYTHON || workspacePython;
 const runsRoot = await fs.mkdtemp(path.join(os.tmpdir(), "open-molecule-lab-contract-"));
 const dataRoot = await fs.mkdtemp(path.join(os.tmpdir(), "open-molecule-lab-data-"));
 const moleculeSetsRoot = path.join(dataRoot, "molecule_sets");
@@ -21,7 +23,7 @@ const child = spawn(process.execPath, [path.join(__dirname, "server.mjs")], {
     OPEN_MOLECULE_PORT: String(port),
     OPEN_MOLECULE_DATA_DIR: dataRoot,
     OPEN_MOLECULE_RUNS_DIR: runsRoot,
-    OPEN_MOLECULE_PYTHON: process.env.OPEN_MOLECULE_PYTHON || workspacePython,
+    OPEN_MOLECULE_PYTHON: runtimePython,
     OPEN_MOLECULE_MAX_BODY_BYTES: "4096",
   },
   stdio: ["ignore", "pipe", "pipe"],
@@ -37,6 +39,27 @@ child.stderr.on("data", (chunk) => {
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
+}
+
+async function collectManifestFiles(root, relative = "") {
+  const entries = await fs.readdir(path.join(root, relative), { withFileTypes: true });
+  const files = [];
+  for (const entry of entries) {
+    const child = path.posix.join(relative.split(path.sep).join("/"), entry.name);
+    if (child === "MANIFEST.sha256") continue;
+    if (entry.isDirectory()) files.push(...await collectManifestFiles(root, child));
+    else if (entry.isFile()) files.push(child);
+  }
+  return files;
+}
+
+async function refreshManifest(root) {
+  const lines = [];
+  for (const relative of (await collectManifestFiles(root)).sort()) {
+    const digest = createHash("sha256").update(await fs.readFile(path.join(root, relative))).digest("hex");
+    lines.push(`${digest}  ${relative}`);
+  }
+  await fs.writeFile(path.join(root, "MANIFEST.sha256"), `${lines.join("\n")}\n`, "utf8");
 }
 
 async function requestJson(url, options) {
@@ -93,8 +116,34 @@ async function postCancel(runId) {
 try {
   const health = await waitForHealth();
   assert(health.product === "open-molecule-lab", `unexpected product: ${health.product}`);
-  assert(health.mode === "plan_only", `unexpected mode: ${health.mode}`);
+  assert(health.mode === "local_execution", `unexpected mode: ${health.mode}`);
   assert(health.cli?.available === true, "four-level CLI source entries must be discoverable");
+  assert(!JSON.stringify(health).includes(sourceRoot), "health response must not expose the host source root");
+
+  const bridgeFixture = path.join(dataRoot, "bridge-results.csv");
+  const bridgeInput = path.join(dataRoot, "bridge-input.csv");
+  const bridgeRows = ["id,smiles,layer1_status,layer2_status,layer3_status,layer4_status,final_score,final_score_dock"];
+  const bridgeInputRows = ["id,smiles"];
+  for (let index = 0; index < 250; index += 1) {
+    bridgeRows.push(`mol-${index},CCO,ok,ok,ok,ok,${(index / 250).toFixed(4)},${((249 - index) / 250).toFixed(4)}`);
+    bridgeInputRows.push(`mol-${index},CCO`);
+  }
+  await fs.writeFile(bridgeFixture, `${bridgeRows.join("\n")}\n`, "utf8");
+  await fs.writeFile(bridgeInput, `${bridgeInputRows.join("\n")}\n`, "utf8");
+  const summaryBridge = spawnSync(runtimePython, [path.join(__dirname, "python-bridge.py"), "summarize-results", "--input", bridgeFixture, "--expected-input", bridgeInput], { encoding: "utf8" });
+  assert(summaryBridge.status === 0, `summary bridge failed: ${summaryBridge.stderr}`);
+  const summaryFixture = JSON.parse(summaryBridge.stdout);
+  assert(summaryFixture.nRows === 250 && !Object.hasOwn(summaryFixture, "rows"), "summary bridge must not materialize all result rows");
+  const missingRowFixture = path.join(dataRoot, "bridge-results-missing-row.csv");
+  await fs.writeFile(missingRowFixture, `${bridgeRows.slice(0, -1).join("\n")}\n`, "utf8");
+  const missingRowBridge = spawnSync(runtimePython, [path.join(__dirname, "python-bridge.py"), "summarize-results", "--input", missingRowFixture, "--expected-input", bridgeInput], { encoding: "utf8" });
+  assert(missingRowBridge.status !== 0, "summary bridge accepted a result file with a missing input row");
+  const pageBridge = spawnSync(runtimePython, [path.join(__dirname, "python-bridge.py"), "page-results", "--input", bridgeFixture, "--offset", "20", "--limit", "25", "--view", "ranked"], { encoding: "utf8" });
+  assert(pageBridge.status === 0, `page bridge failed: ${pageBridge.stderr}`);
+  const pageFixture = JSON.parse(pageBridge.stdout);
+  assert(pageFixture.rows.length === 25 && pageFixture.offset === 20 && pageFixture.limit === 25, "page bridge did not honor bounds");
+  assert(pageFixture.rankingScoreField === "final_score_dock", "page bridge ignored cascade fused scores");
+  assert(pageFixture.rows[0]?.id === "mol-20", "ranked page was not ordered by cascade fused score");
 
   const { response, payload } = await postPrompt({
     prompt: "Plan an auditable four-level screen for influenza neuraminidase.",
@@ -108,6 +157,8 @@ try {
   assert(payload.runId && payload.spec?.schemaVersion === "open-molecule-lab.run-spec.v0.1", "RunSpec missing");
   assert(Array.isArray(payload.stages) && payload.stages.length === 5, "expected five planned stages");
   assert(payload.bundle?.files?.includes("MANIFEST.sha256"), "bundle manifest missing");
+  assert(payload.equivalentCli.includes("--mode library"), "equivalent CLI omitted resolved mode");
+  assert(payload.equivalentCli.includes("--asset-root"), "equivalent CLI omitted asset root");
 
   const runRoot = path.join(runsRoot, payload.runId);
   const expectedFiles = ["DESIGN.md", "MANIFEST.sha256", "prompt.txt", "run.json"];
@@ -198,6 +249,52 @@ try {
   assert(blockedResults.response.status === 409, "blocked run results must return HTTP 409");
   const blockedCancel = await postCancel(execution.payload.runId);
   assert(blockedCancel.response.status === 409, "blocked run cancellation must return HTTP 409");
+
+  const pagedRunRoot = path.join(runsRoot, execution.payload.runId);
+  const pagedRunPath = path.join(pagedRunRoot, "run.json");
+  const pagedRun = JSON.parse(await fs.readFile(pagedRunPath, "utf8"));
+  await fs.writeFile(
+    pagedRunPath,
+    `${JSON.stringify({
+      ...pagedRun,
+      status: "complete",
+      finishedAt: new Date().toISOString(),
+      error: null,
+      resultSummary: { nRows: 250, nRanked: 249, nFailed: 1 },
+    }, null, 2)}\n`,
+    "utf8",
+  );
+  const pagedRows = [...bridgeRows];
+  pagedRows[1] = "mol-0,CCO,failed,ok,ok,ok,,";
+  await fs.writeFile(path.join(pagedRunRoot, "results", "scores.csv"), `${pagedRows.join("\n")}\n`, "utf8");
+  await fs.writeFile(
+    path.join(pagedRunRoot, "results", "summary.json"),
+    `${JSON.stringify({ ok: true, nRows: 250, nRanked: 249, nFailed: 1, columns: bridgeRows[0].split(","), rankingScoreField: "final_score_dock" }, null, 2)}\n`,
+    "utf8",
+  );
+  const tamperedPage = await requestJson(
+    `${baseUrl}/api/runs/${execution.payload.runId}/results?view=ranked&offset=0&limit=25`,
+  );
+  assert(tamperedPage.response.status === 409, "results API accepted files that do not match MANIFEST.sha256");
+  await refreshManifest(pagedRunRoot);
+  const rankedPage = await requestJson(
+    `${baseUrl}/api/runs/${execution.payload.runId}/results?view=ranked&offset=20&limit=25`,
+  );
+  assert(rankedPage.response.status === 200, `ranked results page returned HTTP ${rankedPage.response.status}`);
+  assert(rankedPage.payload.view === "ranked", "ranked results page omitted view");
+  assert(rankedPage.payload.offset === 20 && rankedPage.payload.limit === 25, "ranked results page bounds mismatch");
+  assert(rankedPage.payload.total === 249 && rankedPage.payload.rows.length === 25, "ranked results page total mismatch");
+  assert(!Object.hasOwn(rankedPage.payload, "rankedRows"), "paged API must not materialize rankedRows");
+  const failedPage = await requestJson(
+    `${baseUrl}/api/runs/${execution.payload.runId}/results?view=failed&offset=0&limit=25`,
+  );
+  assert(failedPage.response.status === 200, `failed results page returned HTTP ${failedPage.response.status}`);
+  assert(failedPage.payload.view === "failed" && failedPage.payload.total === 1, "failed results page total mismatch");
+  assert(failedPage.payload.rows[0]?.id === "mol-0", "failed results page returned the wrong row");
+  const invalidPage = await requestJson(
+    `${baseUrl}/api/runs/${execution.payload.runId}/results?view=ranked&offset=-1&limit=25`,
+  );
+  assert(invalidPage.response.status === 400, "invalid results pagination must return HTTP 400");
 
   const beforeInvalid = (await fs.readdir(runsRoot)).length;
   const invalidCases = [

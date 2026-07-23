@@ -5,6 +5,8 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { runPreflight } from "./preflight.mjs";
+
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const appRoot = path.resolve(__dirname, "..");
@@ -108,6 +110,21 @@ async function verifyNoHostPaths(runRoot) {
 
 try {
   await waitForHealth();
+  const aliasPreflight = await runPreflight({
+    sourceRoot,
+    pythonPath,
+    assetRoot,
+    routeBranch: "cascade",
+    targetId: "neuraminidase",
+    expectedCandidateCount: 2,
+    actualCandidateCount: 2,
+    sminaBin: process.env.SMINA_BIN || "",
+    obabelBin: process.env.OBABEL_BIN || "",
+  });
+  assert(aliasPreflight.ok, `alias cascade preflight failed: ${JSON.stringify(aliasPreflight.checks)}`);
+  assert(aliasPreflight.checks.find((check) => check.id === "registered-receptor")?.status === "passed", "alias receptor was not resolved");
+  assert(aliasPreflight.checks.find((check) => check.id === "runtime-versions")?.status === "passed", "manifest runtime versions were not verified");
+  assert(aliasPreflight.checks.find((check) => check.id === "python-modules")?.details?.checked?.includes("joblib"), "joblib was not included in strict module preflight");
   const modelStatus = await requestJson(`${baseUrl}/api/model-status`);
   assert(modelStatus.response.ok, "model status request failed");
   for (const layer of ["L1", "L2", "L3", "L4", "Dock"]) {
@@ -151,7 +168,47 @@ try {
   }
   await verifyManifest(path.join(runsRoot, terminal.runId));
   await verifyNoHostPaths(path.join(runsRoot, terminal.runId));
-  process.stdout.write(`${JSON.stringify({ ok: true, runId: terminal.runId, status: terminal.status, results: results.payload }, null, 2)}\n`);
+
+  const cascadePlan = await post("/api/prompt-plan", {
+    prompt: "Run a strict real two-molecule docking cascade for neuraminidase.",
+    target: "CHEMBL2051",
+    candidatePool: 2,
+    finalSelectionCount: 1,
+    routeMode: "cascade",
+  });
+  assert(cascadePlan.response.ok, `cascade plan failed: ${JSON.stringify(cascadePlan.payload)}`);
+  assert(cascadePlan.payload.route?.branch === "cascade", "cascade plan resolved to the wrong branch");
+  const cascadeLaunch = await post("/api/runs", {
+    planRunId: cascadePlan.payload.runId,
+    moleculeSetId: moleculeSet.payload.moleculeSetId,
+  });
+  assert(cascadeLaunch.response.ok, `cascade launch failed: ${JSON.stringify(cascadeLaunch.payload)}`);
+  const cascadeTerminal = await waitForTerminal(cascadeLaunch.payload.runId);
+  assert(
+    cascadeTerminal.status === "complete",
+    `cascade run ended as ${cascadeTerminal.status}: ${JSON.stringify(cascadeTerminal.error)}`,
+  );
+  const cascadeResults = await requestJson(`${baseUrl}/api/runs/${cascadeTerminal.runId}/results`);
+  assert(cascadeResults.response.ok, `cascade results failed: ${JSON.stringify(cascadeResults.payload)}`);
+  assert(
+    cascadeResults.payload.rankingScoreField === "final_score_dock",
+    `cascade results ignored fused score: ${JSON.stringify(cascadeResults.payload)}`,
+  );
+  assert(
+    cascadeResults.payload.rows.every((row) => typeof row.final_score_dock === "number"),
+    "cascade results omitted fused scores",
+  );
+  assert(
+    cascadeResults.payload.rows.some((row) => row.structure_docking_status === "ok"),
+    "cascade run had no successful structure docking row",
+  );
+  await verifyManifest(path.join(runsRoot, cascadeTerminal.runId));
+  await verifyNoHostPaths(path.join(runsRoot, cascadeTerminal.runId));
+  process.stdout.write(`${JSON.stringify({
+    ok: true,
+    library: { runId: terminal.runId, status: terminal.status, results: results.payload },
+    cascade: { runId: cascadeTerminal.runId, status: cascadeTerminal.status, results: cascadeResults.payload },
+  }, null, 2)}\n`);
 } finally {
   child.kill("SIGTERM");
   if (process.env.OPEN_MOLECULE_KEEP_REAL_RUN !== "1") {

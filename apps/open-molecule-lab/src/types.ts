@@ -8,6 +8,8 @@ export type StageStatus = "planned" | "skipped" | "blocked";
 
 export type ExecutionStatus = "queued" | "running" | "complete" | "failed" | "blocked" | "cancelled";
 
+export type ResultView = "ranked" | "failed" | "all";
+
 export interface CliHealth {
   available: boolean;
   scoringEntry: string;
@@ -17,7 +19,7 @@ export interface CliHealth {
 export interface LabHealth {
   ok: boolean;
   product: "open-molecule-lab";
-  mode: "plan_only";
+  mode: "local_execution";
   sourceRoot: string;
   cli: CliHealth;
   assetManifestPresent: boolean;
@@ -156,6 +158,7 @@ export type ResultRow = Record<string, string | number | null> & {
   layer3_status?: string;
   layer4_status?: string;
   final_score?: number | null;
+  final_score_dock?: number | null;
   gate_status?: string;
   gate_reason?: string | null;
 };
@@ -166,7 +169,10 @@ export interface ResultSummary {
   nRanked: number;
   nFailed: number;
   columns: string[];
+  view: ResultView;
+  offset: number;
+  limit: number;
+  total: number;
+  rankingScoreField: "final_score" | "final_score_dock";
   rows: ResultRow[];
-  rankedRows: ResultRow[];
-  failedRows: ResultRow[];
 }

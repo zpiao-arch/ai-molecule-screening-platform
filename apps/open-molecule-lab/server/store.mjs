@@ -44,6 +44,42 @@ async function refreshManifest(root) {
   await fs.writeFile(path.join(root, "MANIFEST.sha256"), manifestText(await collectFiles(root)), "utf8");
 }
 
+async function verifyManifest(root) {
+  let manifest;
+  try {
+    manifest = await fs.readFile(path.join(root, "MANIFEST.sha256"), "utf8");
+  } catch {
+    return { ok: false, missing: ["MANIFEST.sha256"], mismatches: [], unexpected: [], malformed: [] };
+  }
+  const expected = new Map();
+  const malformed = [];
+  for (const line of manifest.split("\n").filter(Boolean)) {
+    const match = line.match(/^([0-9a-f]{64})  (.+)$/);
+    if (!match || path.isAbsolute(match?.[2] || "") || String(match?.[2] || "").split("/").includes("..")) {
+      malformed.push(line);
+      continue;
+    }
+    expected.set(match[2], match[1]);
+  }
+  const actualFiles = await collectFiles(root);
+  const actualNames = new Set(Object.keys(actualFiles));
+  const missing = [...expected.keys()].filter((name) => !actualNames.has(name)).sort();
+  const unexpected = [...actualNames].filter((name) => !expected.has(name)).sort();
+  const mismatches = [];
+  for (const [name, digest] of expected.entries()) {
+    if (!actualNames.has(name)) continue;
+    if (sha256(actualFiles[name]) !== digest) mismatches.push(name);
+  }
+  mismatches.sort();
+  return {
+    ok: !missing.length && !unexpected.length && !mismatches.length && !malformed.length,
+    missing,
+    mismatches,
+    unexpected,
+    malformed,
+  };
+}
+
 function safeLabel(value, fallback) {
   const normalized = String(value || "").normalize("NFKC").trim().slice(0, 160);
   return normalized || fallback;
@@ -51,6 +87,12 @@ function safeLabel(value, fallback) {
 
 function parseBridgeOutput(result) {
   const output = String(result.stdout || "").trim().split("\n").filter(Boolean).at(-1);
+  if (!output) {
+    throw new StoreError(
+      "Python CSV validator did not start; configure OPEN_MOLECULE_PYTHON to a Python 3.11 runtime with the CLI dependencies",
+      { code: "python_runtime_unavailable", status: 503 },
+    );
+  }
   try {
     return JSON.parse(output || "{}");
   } catch {
@@ -253,5 +295,6 @@ export function createArtifactStore({ dataRoot, runsRoot, sourceRoot, pythonPath
     appendEvent,
     createExecutionRun,
     refreshManifest,
+    verifyManifest,
   };
 }

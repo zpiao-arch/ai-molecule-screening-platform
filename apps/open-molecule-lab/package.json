@@ -8,6 +8,7 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 0.0.0.0",
     "contract-check": "node server/contract-check.mjs",
+    "worker-lifecycle-check": "node server/worker-lifecycle-check.mjs",
     "real-run-check": "node server/real-run-check.mjs",
     "serve": "node server/server.mjs"
   },

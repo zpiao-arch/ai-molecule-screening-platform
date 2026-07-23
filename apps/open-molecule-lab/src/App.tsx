@@ -3,6 +3,8 @@ import {
   AlertTriangle,
   ArrowRight,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   ClipboardList,
   FileCheck2,
   FlaskConical,
@@ -14,7 +16,7 @@ import {
   TerminalSquare,
   Upload,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ChangeEvent, FormEvent, ReactNode } from "react";
 
 import type {
@@ -25,6 +27,7 @@ import type {
   PromptError,
   PromptPlan,
   ResultSummary,
+  ResultView,
   RouteMode,
 } from "./types";
 
@@ -83,10 +86,10 @@ function formatNumber(value: number) {
 
 function toneForStatus(status?: string) {
   const value = String(status || "").toLowerCase();
-  if (value.includes("available") || value.includes("ready") || value.includes("planned") || value.includes("passed") || value.includes("complete")) return "good";
+  if (value.includes("available") || value.includes("ready") || value.includes("passed") || value.includes("complete")) return "good";
   if (value.includes("blocked") || value.includes("not_found") || value.includes("error") || value.includes("failed")) return "bad";
-  if (value.includes("skipped") || value.includes("review")) return "warn";
-  if (value.includes("running") || value.includes("queued")) return "info";
+  if (value.includes("skipped") || value.includes("review") || value.includes("cancelled")) return "warn";
+  if (value.includes("running") || value.includes("queued") || value.includes("planned")) return "info";
   return "idle";
 }
 
@@ -108,10 +111,12 @@ function App() {
   const [moleculeSet, setMoleculeSet] = useState<MoleculeSet | null>(null);
   const [run, setRun] = useState<ExecutionRun | null>(null);
   const [results, setResults] = useState<ResultSummary | null>(null);
+  const [resultsLoading, setResultsLoading] = useState(false);
   const [auditOpen, setAuditOpen] = useState(false);
+  const resultsRequestRef = useRef(0);
 
   const runnerTone = health?.ok ? "good" : health ? "bad" : "info";
-  const runnerLabel = health?.ok ? "plan server online" : health ? "server unavailable" : "connecting";
+  const runnerLabel = health?.ok ? "local runner online" : health ? "server unavailable" : "connecting";
   const routeTone = toneForStatus(plan?.route.status);
   const runTone = toneForStatus(run?.status);
   const runActive = run?.status === "queued" || run?.status === "running";
@@ -186,9 +191,11 @@ function App() {
         const message = payload.ok ? `prompt-plan HTTP ${response.status}` : payload.error.message;
         throw new Error(message);
       }
+      resultsRequestRef.current += 1;
       setPlan(payload);
       setRun(null);
       setResults(null);
+      setResultsLoading(false);
       setRunError("");
       setAuditOpen(false);
     } catch (error) {
@@ -201,6 +208,9 @@ function App() {
   async function uploadMoleculeSet(event: ChangeEvent<HTMLInputElement>) {
     const file = event.currentTarget.files?.[0];
     if (!file) return;
+    resultsRequestRef.current += 1;
+    setResults(null);
+    setResultsLoading(false);
     setUploadError("");
     setIsUploading(true);
     try {
@@ -216,7 +226,6 @@ function App() {
       }
       setMoleculeSet(payload);
       setRun(null);
-      setResults(null);
     } catch (error) {
       setMoleculeSet(null);
       setUploadError(error instanceof Error ? error.message : String(error));
@@ -228,8 +237,10 @@ function App() {
 
   async function launchRun() {
     if (!plan || !moleculeSet || !canRun) return;
+    resultsRequestRef.current += 1;
     setRunError("");
     setResults(null);
+    setResultsLoading(false);
     try {
       const response = await fetch("/api/runs", {
         method: "POST",
@@ -258,6 +269,25 @@ function App() {
     }
   }
 
+  async function loadResults(runId: string, view: ResultView = "ranked", offset = 0) {
+    const requestId = ++resultsRequestRef.current;
+    setResultsLoading(true);
+    try {
+      const params = new URLSearchParams({ view, offset: String(offset), limit: "50" });
+      const response = await fetch(`/api/runs/${runId}/results?${params}`, { cache: "no-store" });
+      if (!response.ok) throw new Error(`results HTTP ${response.status}`);
+      const payload = (await response.json()) as ResultSummary;
+      if (requestId === resultsRequestRef.current) setResults(payload);
+    } catch (error) {
+      if (requestId === resultsRequestRef.current) {
+        setResults(null);
+        setRunError(error instanceof Error ? error.message : String(error));
+      }
+    } finally {
+      if (requestId === resultsRequestRef.current) setResultsLoading(false);
+    }
+  }
+
   useEffect(() => {
     if (!run || !runActive) return undefined;
     let cancelled = false;
@@ -268,11 +298,6 @@ function App() {
         const payload = (await response.json()) as ExecutionRun;
         if (cancelled) return;
         setRun(payload);
-        if (payload.status === "complete") {
-          const resultResponse = await fetch(`/api/runs/${payload.runId}/results`, { cache: "no-store" });
-          if (!resultResponse.ok) throw new Error(`results HTTP ${resultResponse.status}`);
-          setResults((await resultResponse.json()) as ResultSummary);
-        }
       } catch (error) {
         if (!cancelled) setRunError(error instanceof Error ? error.message : String(error));
       }
@@ -285,15 +310,7 @@ function App() {
 
   useEffect(() => {
     if (!run || run.status !== "complete" || results) return;
-    let cancelled = false;
-    void fetch(`/api/runs/${run.runId}/results`, { cache: "no-store" })
-      .then(async (response) => {
-        if (!response.ok) throw new Error(`results HTTP ${response.status}`);
-        return (await response.json()) as ResultSummary;
-      })
-      .then((payload) => { if (!cancelled) setResults(payload); })
-      .catch((error) => { if (!cancelled) setRunError(error instanceof Error ? error.message : String(error)); });
-    return () => { cancelled = true; };
+    void loadResults(run.runId);
   }, [run, results]);
 
   return (
@@ -486,7 +503,13 @@ function App() {
               <PreflightList checks={run.preflight.checks} />
             </div>
           ) : null}
-          {results ? <ResultSummaryView results={results} /> : null}
+          {results && run ? (
+            <ResultSummaryView
+              results={results}
+              loading={resultsLoading}
+              onPage={(view, offset) => void loadResults(run.runId, view, offset)}
+            />
+          ) : null}
         </section>
 
         <aside className="evidence-panel" aria-label="后端和证据要求">
@@ -602,7 +625,20 @@ function PreflightList({ checks }: { checks: ExecutionRun["preflight"]["checks"]
   );
 }
 
-function ResultSummaryView({ results }: { results: ResultSummary }) {
+function ResultSummaryView({
+  results,
+  loading,
+  onPage,
+}: {
+  results: ResultSummary;
+  loading: boolean;
+  onPage: (view: ResultView, offset: number) => void;
+}) {
+  const pageStart = results.total ? results.offset + 1 : 0;
+  const pageEnd = Math.min(results.offset + results.rows.length, results.total);
+  const canGoBack = results.offset > 0;
+  const canGoForward = results.offset + results.limit < results.total;
+  const showsFusedScore = results.rankingScoreField === "final_score_dock";
   return (
     <section className="result-summary" aria-label="四级结果摘要">
       <div className="section-head compact">
@@ -611,6 +647,47 @@ function ResultSummaryView({ results }: { results: ResultSummary }) {
           <h3>结果摘要</h3>
         </div>
         <span className="state-pill good">{results.nRanked}/{results.nRows} ranked</span>
+      </div>
+      <div className="result-toolbar">
+        <div className="result-tabs" aria-label="结果视图">
+          <button
+            className={results.view === "ranked" ? "active" : ""}
+            type="button"
+            disabled={loading}
+            onClick={() => onPage("ranked", 0)}
+          >
+            Ranked {results.nRanked}
+          </button>
+          <button
+            className={results.view === "failed" ? "active" : ""}
+            type="button"
+            disabled={loading || results.nFailed === 0}
+            onClick={() => onPage("failed", 0)}
+          >
+            Failed {results.nFailed}
+          </button>
+        </div>
+        <div className="result-pager">
+          <button
+            type="button"
+            title="上一页"
+            aria-label="上一页"
+            disabled={loading || !canGoBack}
+            onClick={() => onPage(results.view, Math.max(0, results.offset - results.limit))}
+          >
+            <ChevronLeft size={16} aria-hidden="true" />
+          </button>
+          <span>{pageStart}-{pageEnd} / {results.total}</span>
+          <button
+            type="button"
+            title="下一页"
+            aria-label="下一页"
+            disabled={loading || !canGoForward}
+            onClick={() => onPage(results.view, results.offset + results.limit)}
+          >
+            <ChevronRight size={16} aria-hidden="true" />
+          </button>
+        </div>
       </div>
       <div className="result-table-wrap">
         <table className="result-table">
@@ -621,12 +698,13 @@ function ResultSummaryView({ results }: { results: ResultSummary }) {
               <th>L2</th>
               <th>L3</th>
               <th>L4</th>
-              <th>Final</th>
+              <th>Base</th>
+              {showsFusedScore ? <th>Fused</th> : null}
               <th>Gate</th>
             </tr>
           </thead>
           <tbody>
-            {results.rankedRows.map((row) => (
+            {results.rows.map((row) => (
               <tr key={row.id}>
                 <td><strong>{row.id}</strong><small>{row.smiles}</small></td>
                 <td>{row.layer1_status || "-"}</td>
@@ -634,13 +712,18 @@ function ResultSummaryView({ results }: { results: ResultSummary }) {
                 <td>{row.layer3_status || "-"}</td>
                 <td>{row.layer4_status || "-"}</td>
                 <td>{typeof row.final_score === "number" ? row.final_score.toFixed(4) : "-"}</td>
+                {showsFusedScore ? (
+                  <td>{typeof row.final_score_dock === "number" ? row.final_score_dock.toFixed(4) : "-"}</td>
+                ) : null}
                 <td>{row.gate_status || "-"}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      {results.nFailed ? <p className="result-warning">{results.nFailed} 行未进入排名，失败状态保留在 evidence bundle 中。</p> : null}
+      {results.view === "failed" && !results.rows.length ? (
+        <p className="result-warning">当前运行没有失败行。</p>
+      ) : null}
     </section>
   );
 }

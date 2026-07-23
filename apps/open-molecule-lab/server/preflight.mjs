@@ -4,7 +4,7 @@ import { spawnSync } from "node:child_process";
 import path from "node:path";
 
 
-const requiredModules = ["rdkit", "numpy", "pandas", "pyarrow", "sklearn", "torch", "unimol_tools"];
+const requiredModules = ["rdkit", "numpy", "pandas", "pyarrow", "sklearn", "torch", "unimol_tools", "joblib"];
 
 function check(id, label, required, passed, message, details) {
   return {
@@ -41,6 +41,16 @@ function executable(value) {
   }
 }
 
+function resolveExecutable(explicit, name) {
+  if (explicit && executable(explicit)) return explicit;
+  const probe = spawnSync("which", [name], { encoding: "utf8", timeout: 2000 });
+  return probe.status === 0 ? String(probe.stdout || "").trim() : "";
+}
+
+function normalizeTargetName(value) {
+  return String(value || "").trim().toLowerCase().replace(/[_\s-]+/g, "");
+}
+
 async function cascadeAssets({ sourceRoot, assetRoot, targetId, sminaBin, obabelBin }) {
   if (!assetRoot) {
     return { receptor: false, receptorName: "", smina: false, obabel: false };
@@ -50,7 +60,11 @@ async function cascadeAssets({ sourceRoot, assetRoot, targetId, sminaBin, obabel
     const registry = JSON.parse(
       await fs.readFile(path.join(sourceRoot, "scoring", "receptor_registry.json"), "utf8"),
     );
-    const entry = registry.entries?.[targetId];
+    const entries = registry.entries || {};
+    const target = normalizeTargetName(targetId);
+    const entry = entries[targetId] || Object.entries(entries).find(([key, candidate]) => (
+      normalizeTargetName(key) === target || normalizeTargetName(candidate.target_name) === target
+    ))?.[1];
     if (entry?.pdbqt) {
       receptorPath = path.isAbsolute(entry.pdbqt)
         ? entry.pdbqt
@@ -62,8 +76,8 @@ async function cascadeAssets({ sourceRoot, assetRoot, targetId, sminaBin, obabel
   return {
     receptor: Boolean(receptorPath && existsSync(receptorPath)),
     receptorName: receptorPath ? path.basename(receptorPath) : "",
-    smina: executable(sminaBin),
-    obabel: executable(obabelBin),
+    smina: Boolean(resolveExecutable(sminaBin, "smina")),
+    obabel: Boolean(resolveExecutable(obabelBin, "obabel")),
   };
 }
 
@@ -82,7 +96,10 @@ export async function runPreflight({
   const probeCode = [
     "import importlib.util,json,sys",
     `mods=${JSON.stringify(requiredModules)}`,
-    "print(json.dumps({'version':list(sys.version_info[:3]),'modules':{m:bool(importlib.util.find_spec(m)) for m in mods}}))",
+    "import importlib.metadata",
+    "dist={'numpy':('numpy','numpy'),'scikit_learn':('sklearn','scikit-learn'),'torch':('torch','torch'),'unimol_tools':('unimol_tools','unimol-tools'),'joblib':('joblib','joblib')}",
+    "versions={k:(importlib.metadata.version(d) if importlib.util.find_spec(m) else None) for k,(m,d) in dist.items()}",
+    "print(json.dumps({'version':list(sys.version_info[:3]),'modules':{m:bool(importlib.util.find_spec(m)) for m in mods},'versions':versions}))",
   ].join(";");
   const probe = spawnSync(pythonPath, ["-c", probeCode], {
     cwd: sourceRoot,
@@ -101,7 +118,7 @@ export async function runPreflight({
     true,
     missingModules.length === 0,
     missingModules.length === 0 ? "all required modules are importable" : `missing modules: ${missingModules.join(", ")}`,
-    missingModules.length ? { missing: missingModules } : undefined,
+    { checked: requiredModules, missing: missingModules },
   ));
   checks.push(check(
     "candidate-count",
@@ -147,6 +164,29 @@ export async function runPreflight({
     assetVerification && !assetVerification.ok
       ? { missing: assetVerification.missing || [], mismatches: assetVerification.mismatches || [] }
       : undefined,
+  ));
+  const expectedRuntime = assetVerification && assetRoot && existsSync(manifestPath)
+    ? JSON.parse(await fs.readFile(manifestPath, "utf8")).validated_runtime || {}
+    : {};
+  const actualRuntime = python?.versions || {};
+  const runtimeMismatches = Object.entries({
+    numpy: expectedRuntime.numpy,
+    scikit_learn: expectedRuntime.scikit_learn,
+    torch: expectedRuntime.torch,
+    unimol_tools: expectedRuntime.unimol_tools,
+  }).filter(([name, expected]) => expected && actualRuntime[name] !== expected)
+    .map(([name, expected]) => `${name}: expected ${expected}, got ${actualRuntime[name] || "missing"}`);
+  checks.push(check(
+    "runtime-versions",
+    "Manifest runtime versions",
+    true,
+    Boolean(assetVerification?.ok) && runtimeMismatches.length === 0,
+    runtimeMismatches.length === 0 && assetVerification?.ok
+      ? "Python package versions match ASSET_MANIFEST.json"
+      : runtimeMismatches.length
+        ? runtimeMismatches.join("; ")
+        : "asset manifest runtime declarations are unavailable",
+    { checked: Object.keys(expectedRuntime), mismatches: runtimeMismatches },
   ));
 
   const cascade = await cascadeAssets({ sourceRoot, assetRoot, targetId, sminaBin, obabelBin });

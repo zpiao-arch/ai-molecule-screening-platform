@@ -32,9 +32,10 @@ Vite proxies `/api` to the local server on port 4173.
 ```bash
 npm run build
 npm run contract-check
+npm run worker-lifecycle-check
 ```
 
-The contract check verifies health, prompt validation, RunSpec creation, plan bundle contents, SHA-256 manifest presence and absolute-path exclusion.
+The contract check verifies health, prompt validation, RunSpec creation, plan bundle contents, paged ranked/failed result retrieval, SHA-256 manifest presence and absolute-path exclusion. The worker lifecycle check verifies that cancellation terminates the detached worker process group, including a spawned child process.
 
 ## Runtime configuration
 
@@ -48,18 +49,18 @@ export OBABEL_BIN=/path/to/obabel
 npm run serve
 ```
 
-Without `OPEN_MOLECULE_ASSET_ROOT`, a run is persisted as `blocked` during strict preflight. `queued`, `running`, `complete`, `failed`, `blocked` and `cancelled` are persisted in `run.json`; server restart marks orphaned active runs as `failed/worker_interrupted`. Automatic checkpoint resume is not yet part of this increment.
+Without `OPEN_MOLECULE_ASSET_ROOT`, a run is persisted as `blocked` during strict preflight. `queued`, `running`, `complete`, `failed`, `blocked` and `cancelled` are persisted in `run.json`; cancellation and server shutdown signal the detached worker process group so docking children do not remain active. Server restart terminates a recorded orphan worker before marking the run as `failed/worker_interrupted`. Automatic checkpoint resume is not yet part of this increment.
 
 ## Current API
 
-- `GET /api/health`: local source/CLI discovery and plan-only capability.
+- `GET /api/health`: local source/CLI discovery and `local_execution` capability.
 - `GET /api/model-status`: L1/L2/L3/L4/docking asset availability.
 - `POST /api/prompt-plan`: validate a research prompt and persist an auditable plan bundle.
 - `POST /api/molecule-sets`: validate and content-address an `id,smiles` CSV (BOM supported).
 - `GET /api/molecule-sets/:id`: retrieve immutable MoleculeSet metadata.
 - `POST /api/runs`: attach a MoleculeSet, run strict preflight and queue/blocked the CLI execution.
 - `GET /api/runs/:id`: retrieve persisted status, preflight and result counts.
-- `GET /api/runs/:id/results`: retrieve ranked rows and preserved failed rows after completion.
+- `GET /api/runs/:id/results?view=ranked|failed|all&offset=0&limit=50`: retrieve one bounded result page after completion (`limit` is capped at 200).
 - `POST /api/runs/:id/cancel`: request cancellation of a queued/running local worker.
 
 Example request:
@@ -80,9 +81,10 @@ Source-only contract, including invalid CSVs and fail-closed preflight:
 
 ```bash
 npm run contract-check
+npm run worker-lifecycle-check
 ```
 
-Two-row real L1-L4 execution with the offline asset bundle:
+Two-row real L1-L4 library and smina cascade executions with the offline asset bundle:
 
 ```bash
 OPEN_MOLECULE_PYTHON=/path/to/python3.11 \
@@ -92,7 +94,7 @@ OBABEL_BIN=/path/to/obabel \
 npm run real-run-check
 ```
 
-The real-run checker requires all four layer statuses to be `ok`, verifies the result summary, checks the complete evidence manifest and rejects host-absolute paths in the public bundle files.
+The real-run checker requires all four layer statuses to be `ok`, runs both `library` and `cascade`, requires real structure docking rows in the cascade, and verifies that ranked cascade pages use `final_score_dock` while retaining the base score. It also checks the complete evidence manifest and rejects host-absolute paths in the public bundle files. Result identity must match the sealed MoleculeSet exactly; missing, duplicate, unexpected or SMILES-mutated rows cannot reach `complete`.
 
 ## Next Boundary
 

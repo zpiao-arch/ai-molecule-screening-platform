@@ -22,7 +22,7 @@
 - L1/L2/L3/L4 failure 均为 `0`，fit-pair contamination 为 `0`。
 - 正式 CLI 与批量路径的 20 分子等价性复核最大差为 `0`，容差 `1e-4`。
 - CHEMBL2051 的 top-300 对接包含逐分子状态、affinity、ligand efficiency 和命令参数。
-- 冻结运行基线测试：`43 passed`；当前 source-only 默认测试：`97 passed, 10 deselected`；Open Molecule Lab source-only contract、前端 build 和两分子真实离线运行均已单独验证。测试标记和运行命令见下文。
+- 冻结运行基线测试：`43 passed`；当前 source-only 默认测试：`97 passed, 10 deselected`；Open Molecule Lab source-only contract、worker 进程组生命周期、前端 build，以及两分子的真实 library + smina cascade 离线运行均已单独验证。测试标记和运行命令见下文。
 
 结果的统计边界见 [VALIDATION.md](VALIDATION.md)，compact snapshot 的证据在 [validation/frozen_run](validation/frozen_run) 中。运行 `python -m scientific_validation.four_level_cli_1kx10k.verify_snapshot --snapshot-dir validation/frozen_run` 验证源码包快照；完整 1 GB 本机 run 仍使用 `verify_run --strict`。pair-heldout 结果不是冷靶点、冷分子、时间外推或湿实验验证；当前受体注册表只有 CHEMBL2051。
 

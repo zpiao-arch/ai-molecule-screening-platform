@@ -80,26 +80,111 @@ def _json_safe(value):
     return value
 
 
-def summarize_results(path: Path) -> dict[str, object]:
+def _read_results(path: Path):
     import pandas as pd
 
-    frame = pd.read_csv(path)
+    return pd.read_csv(path, dtype={"id": "string", "smiles": "string"})
+
+
+def _ranking_score_field(frame) -> str:
+    if "final_score_dock" in frame.columns and frame["final_score_dock"].notna().any():
+        return "final_score_dock"
+    return "final_score"
+
+
+def _validate_result_identity(frame, expected_input: Path | None) -> dict[str, object] | None:
+    if "id" not in frame.columns or "smiles" not in frame.columns:
+        return {"ok": False, "error": "results missing required columns: id, smiles", "field": "results"}
+    result_ids = frame["id"].fillna("").astype(str)
+    if result_ids.eq("").any():
+        return {"ok": False, "error": "results contain blank ids", "field": "results"}
+    duplicated = sorted(result_ids[result_ids.duplicated(keep=False)].unique().tolist())
+    if duplicated:
+        return {
+            "ok": False,
+            "error": f"results contain duplicate ids: {', '.join(duplicated[:10])}",
+            "field": "results",
+        }
+    if expected_input is None:
+        return None
+
+    expected = _read_results(expected_input)
+    if "id" not in expected.columns or "smiles" not in expected.columns:
+        return {"ok": False, "error": "expected input missing id/smiles columns", "field": "expectedInput"}
+    expected_ids = expected["id"].fillna("").astype(str)
+    result_set = set(result_ids)
+    expected_set = set(expected_ids)
+    missing = sorted(expected_set - result_set)
+    unexpected = sorted(result_set - expected_set)
+    if len(frame) != len(expected) or missing or unexpected:
+        return {
+            "ok": False,
+            "error": (
+                f"result identity mismatch: expected={len(expected)} actual={len(frame)} "
+                f"missing={missing[:10]} unexpected={unexpected[:10]}"
+            ),
+            "field": "results",
+        }
+    expected_smiles = dict(zip(expected_ids, expected["smiles"].fillna("").astype(str), strict=True))
+    result_smiles = dict(zip(result_ids, frame["smiles"].fillna("").astype(str), strict=True))
+    changed = sorted(mol_id for mol_id in expected_set if expected_smiles[mol_id] != result_smiles[mol_id])
+    if changed:
+        return {
+            "ok": False,
+            "error": f"results changed smiles for ids: {', '.join(changed[:10])}",
+            "field": "results",
+        }
+    return None
+
+
+def summarize_results(path: Path, expected_input: Path | None = None) -> dict[str, object]:
+    frame = _read_results(path)
+    identity_error = _validate_result_identity(frame, expected_input)
+    if identity_error:
+        return identity_error
     status_columns = [f"layer{layer}_status" for layer in range(1, 5)]
     missing = [column for column in status_columns + ["final_score"] if column not in frame.columns]
     if missing:
         return {"ok": False, "error": f"results missing required columns: {', '.join(missing)}", "field": "results"}
-    valid = frame[status_columns].eq("ok").all(axis=1) & frame["final_score"].notna()
-    ranked = frame.loc[valid].sort_values("final_score", ascending=False, kind="mergesort")
-    failed = frame.loc[~valid]
+    ranking_score_field = _ranking_score_field(frame)
+    valid = frame[status_columns].eq("ok").all(axis=1) & frame[ranking_score_field].notna()
     return {
         "ok": True,
         "nRows": int(len(frame)),
         "nRanked": int(valid.sum()),
         "nFailed": int((~valid).sum()),
         "columns": [str(column) for column in frame.columns],
-        "rows": _json_safe(frame.to_dict(orient="records")),
-        "rankedRows": _json_safe(ranked.head(100).to_dict(orient="records")),
-        "failedRows": _json_safe(failed.head(100).to_dict(orient="records")),
+        "rankingScoreField": ranking_score_field,
+    }
+
+
+def page_results(path: Path, offset: int, limit: int, view: str) -> dict[str, object]:
+    import pandas as pd
+
+    if offset < 0 or limit < 1 or limit > 200:
+        return {"ok": False, "error": "offset must be >= 0 and limit must be 1..200", "field": "pagination"}
+    frame = _read_results(path)
+    status_columns = [f"layer{layer}_status" for layer in range(1, 5)]
+    missing = [column for column in status_columns + ["final_score"] if column not in frame.columns]
+    if missing:
+        return {"ok": False, "error": f"results missing required columns: {', '.join(missing)}", "field": "results"}
+    ranking_score_field = _ranking_score_field(frame)
+    valid = frame[status_columns].eq("ok").all(axis=1) & frame[ranking_score_field].notna()
+    if view == "ranked":
+        selected = frame.loc[valid].sort_values(ranking_score_field, ascending=False, kind="mergesort")
+    elif view == "failed":
+        selected = frame.loc[~valid]
+    else:
+        selected = frame
+    page = selected.iloc[offset:offset + limit]
+    return {
+        "ok": True,
+        "view": view,
+        "offset": offset,
+        "limit": limit,
+        "total": int(len(selected)),
+        "rankingScoreField": ranking_score_field,
+        "rows": _json_safe(page.to_dict(orient="records")),
     }
 
 
@@ -111,12 +196,23 @@ def main() -> int:
     validate.add_argument("--max-rows", type=int, default=100_000)
     summarize = subparsers.add_parser("summarize-results")
     summarize.add_argument("--input", type=Path, required=True)
+    summarize.add_argument("--expected-input", type=Path)
+    page = subparsers.add_parser("page-results")
+    page.add_argument("--input", type=Path, required=True)
+    page.add_argument("--offset", type=int, default=0)
+    page.add_argument("--limit", type=int, default=100)
+    page.add_argument("--view", choices=["ranked", "failed", "all"], default="ranked")
     args = parser.parse_args()
 
     if args.command == "validate-molecule-set":
         result = validate_molecule_set(args.input.resolve(), args.max_rows)
     elif args.command == "summarize-results":
-        result = summarize_results(args.input.resolve())
+        result = summarize_results(
+            args.input.resolve(),
+            args.expected_input.resolve() if args.expected_input else None,
+        )
+    elif args.command == "page-results":
+        result = page_results(args.input.resolve(), args.offset, args.limit, args.view)
     else:  # pragma: no cover
         result = {"ok": False, "error": "unsupported command", "field": "command"}
     print(json.dumps(result, ensure_ascii=False))

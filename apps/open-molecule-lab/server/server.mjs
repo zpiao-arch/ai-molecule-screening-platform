@@ -33,6 +33,30 @@ const receptorRegistry = path.join(sourceRoot, "scoring", "receptor_registry.jso
 const host = process.env.OPEN_MOLECULE_HOST || process.env.HOST || "127.0.0.1";
 const port = Number(process.env.OPEN_MOLECULE_PORT || process.env.PORT || 4173);
 const maxBodyBytes = Number(process.env.OPEN_MOLECULE_MAX_BODY_BYTES || 8 * 1024 * 1024);
+
+function externalAssetBundleVerified() {
+  if (!externalAssetRoot) return false;
+  const manifestPath = path.join(externalAssetRoot, "ASSET_MANIFEST.json");
+  if (!existsSync(manifestPath)) return false;
+  const verify = spawnSync(
+    pythonPath,
+    [
+      path.join(sourceRoot, "scripts", "verify_assets.py"),
+      "--asset-root",
+      externalAssetRoot,
+      "--manifest",
+      manifestPath,
+    ],
+    { cwd: sourceRoot, encoding: "utf8", timeout: 120_000 },
+  );
+  try {
+    return verify.status === 0 && JSON.parse(String(verify.stdout || "{}")).ok === true;
+  } catch {
+    return false;
+  }
+}
+
+const assetBundleVerified = externalAssetBundleVerified();
 const artifactStore = createArtifactStore({ dataRoot, runsRoot, sourceRoot, pythonPath, bridgePath });
 const workerManager = createWorkerManager({
   store: artifactStore,
@@ -47,6 +71,7 @@ const workerManager = createWorkerManager({
 async function recoverInterruptedRuns() {
   for (const run of await artifactStore.listRuns()) {
     if (!["queued", "running"].includes(run.status)) continue;
+    if (run.pid) await workerManager.terminateOrphan(run.pid, "SIGTERM");
     await artifactStore.updateRun(
       run.runId,
       {
@@ -111,7 +136,7 @@ async function readJsonBody(request) {
 
 function pythonModuleAvailable(moduleName) {
   const probe = spawnSync(
-    "python3",
+    pythonPath,
     ["-c", `import importlib.util,sys;sys.exit(0 if importlib.util.find_spec(${JSON.stringify(moduleName)}) else 1)`],
     { stdio: "ignore", timeout: 3000 },
   );
@@ -137,14 +162,14 @@ function modelStatusRows() {
     ? path.join(externalAssetRoot, "scoring")
     : path.join(sourceRoot, "scoring");
   const modelRoot = path.join(scoringRoot, "models");
-  const l2Available = [
+  const l2Available = assetBundleVerified && [
     path.join(modelRoot, "bindingdb_l2", "l2_model_sklearn_1_7_2.joblib"),
     path.join(modelRoot, "bindingdb_l2", "l2_model.joblib"),
   ].some(existsSync);
-  const l3Available = ["tox21.pkl", "bbbp.pkl", "clintox.pkl", "sider.pkl"].every((name) =>
+  const l3Available = assetBundleVerified && ["tox21.pkl", "bbbp.pkl", "clintox.pkl", "sider.pkl"].every((name) =>
     existsSync(path.join(modelRoot, "admet", name)),
   );
-  const l4Available = [
+  const l4Available = assetBundleVerified && [
     path.join(modelRoot, "ref_embeddings.npz"),
     path.join(modelRoot, "ref_smiles.pkl"),
   ].every(existsSync);
@@ -246,7 +271,9 @@ async function receptorForTarget(targetId) {
     const externalPath = externalAssetRoot && !path.isAbsolute(matched.pdbqt)
       ? path.resolve(externalAssetRoot, "scoring", matched.pdbqt)
       : "";
-    const receptorPath = externalPath && existsSync(externalPath) ? externalPath : sourcePath;
+    const receptorPath = externalAssetRoot && !path.isAbsolute(matched.pdbqt)
+      ? externalPath
+      : sourcePath;
     return {
       registered: true,
       available: existsSync(receptorPath),
@@ -317,14 +344,20 @@ function plannedStages(route) {
   ];
 }
 
-function equivalentCli(targetId, runId) {
-  return [
+function equivalentCli(targetId, runId, route) {
+  const command = [
     "four-level-molecule \\",
     "  --input <molecule-set.csv> \\",
     `  --target ${JSON.stringify(targetId)} \\`,
+    `  --mode ${route.branch} \\`,
+    "  --asset-root '<asset-root>' \\",
     "  --strict-backends \\",
     `  --output runs/${runId}/scores.csv`,
-  ].join("\n");
+  ];
+  if (route.branch === "cascade") {
+    command.splice(command.length - 1, 0, "  --cascade-top-n 300 \\");
+  }
+  return command.join("\n");
 }
 
 async function writePlanBundle({ runId, prompt, spec, route, stages, assetRequirements, createdAt }) {
@@ -456,7 +489,7 @@ async function createPromptPlan(body) {
     stages,
     assetRequirements,
     executionBoundary: scientificBoundary,
-    equivalentCli: equivalentCli(targetId, runId),
+    equivalentCli: equivalentCli(targetId, runId, route),
     bundle,
   };
 }
@@ -466,12 +499,12 @@ async function handleApi(request, response, url) {
     return jsonResponse(response, 200, {
       ok: true,
       product: "open-molecule-lab",
-      mode: "plan_only",
-      sourceRoot,
+      mode: "local_execution",
+      sourceRoot: ".",
       cli: {
         available: existsSync(scoringEntry) && existsSync(benchmarkEntry),
-        scoringEntry,
-        benchmarkEntry,
+        scoringEntry: "scoring/scoring.py",
+        benchmarkEntry: "scientific_validation/four_level_cli_1kx10k/batch_cli.py",
       },
       assetManifestPresent: existsSync(
         externalAssetRoot ? path.join(externalAssetRoot, "ASSET_MANIFEST.json") : assetManifest,
@@ -555,8 +588,32 @@ async function handleApi(request, response, url) {
       return jsonResponse(response, 409, errorPayload("run_not_complete", `Run status is ${run.status}`));
     }
     try {
+      const integrity = await artifactStore.verifyManifest(path.join(runsRoot, runId));
+      if (!integrity.ok) {
+        return jsonResponse(
+          response,
+          409,
+          errorPayload("evidence_integrity_failed", "Run evidence does not match MANIFEST.sha256"),
+        );
+      }
       const summary = JSON.parse(await fs.readFile(path.join(runsRoot, runId, "results", "summary.json"), "utf8"));
-      return jsonResponse(response, 200, summary);
+      const rawOffset = Number(url.searchParams.get("offset") || 0);
+      const rawLimit = Number(url.searchParams.get("limit") || 100);
+      const view = url.searchParams.get("view") || "ranked";
+      if (!Number.isInteger(rawOffset) || rawOffset < 0 || !Number.isInteger(rawLimit) || rawLimit < 1 || rawLimit > 200 || !new Set(["ranked", "failed", "all"]).has(view)) {
+        return jsonResponse(response, 400, errorPayload("invalid_pagination", "offset must be >= 0, limit must be 1..200, view must be ranked/failed/all", "pagination"));
+      }
+      const pageProcess = spawnSync(
+        pythonPath,
+        [bridgePath, "page-results", "--input", path.join(runsRoot, runId, "results", "scores.csv"), "--offset", String(rawOffset), "--limit", String(rawLimit), "--view", view],
+        { cwd: sourceRoot, encoding: "utf8", timeout: 30_000 },
+      );
+      const pageLine = String(pageProcess.stdout || "").trim().split("\n").filter(Boolean).at(-1);
+      const page = pageLine ? JSON.parse(pageLine) : null;
+      if (pageProcess.status !== 0 || !page?.ok) {
+        return jsonResponse(response, 500, errorPayload("results_page_failed", page?.error || "result page failed"));
+      }
+      return jsonResponse(response, 200, { ...summary, ...page });
     } catch {
       return jsonResponse(response, 500, errorPayload("results_missing", "Completed run has no result summary"));
     }
@@ -643,6 +700,12 @@ server.listen(port, host, () => {
   process.stdout.write(`Open Molecule Lab listening on http://${host}:${actualPort}\n`);
 });
 
+let shuttingDown = false;
 for (const signal of ["SIGINT", "SIGTERM"]) {
-  process.on(signal, () => server.close(() => process.exit(0)));
+  process.on(signal, async () => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    await workerManager.shutdown();
+    server.close(() => process.exit(0));
+  });
 }

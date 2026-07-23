@@ -5,7 +5,7 @@
 ## Included
 
 - `scoring/`: 当前正式四层 CLI、L2 BindingDB、L3 ADMET、L4 UniMol、路由、对接精排、靶点解析、序列嵌入和脚本。
-- `apps/open-molecule-lab/`: prompt-first 本地工作台、MoleculeSet 校验、严格预检、后台 CLI worker、状态/结果 API 和前端结果浏览器；不包含运行产物或 `node_modules`。
+- `apps/open-molecule-lab/`: prompt-first 本地工作台、MoleculeSet 校验、严格预检、后台 CLI worker、进程组取消/退出清理、分页状态/结果 API 和前端结果浏览器；不包含运行产物或 `node_modules`。
 - `scoring/data/` 和 `examples/`: 小型案例输入。输出目录由 CLI 按需创建；旧字段/失败状态的历史 CSV 不作为正式样例分发。
 - `scientific_validation/four_level_cli_1kx10k/`: 1000×10000 批量 CLI、数据契约、缓存、指标、报告、manifest 和 verifier。
 - `tests/`: 四级 CLI 契约、数据集、指标和运行验证测试。
