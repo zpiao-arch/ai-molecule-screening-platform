@@ -523,13 +523,16 @@ async function handleApi(request, response, url) {
         sminaBin: process.env.SMINA_BIN || "",
         obabelBin: process.env.OBABEL_BIN || "",
       });
-      const run = await artifactStore.createExecutionRun({
+      let run = await artifactStore.createExecutionRun({
         planRunId: body.planRunId,
         plan,
         moleculeSet,
         preflight,
       });
-      if (run.status === "queued") void workerManager.start(run);
+      if (run.status === "queued") {
+        await workerManager.start(run);
+        run = await artifactStore.getRun(run.runId);
+      }
       return jsonResponse(response, 201, { ok: true, ...run });
     } catch (error) {
       const known = error instanceof StoreError;
