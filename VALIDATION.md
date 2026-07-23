@@ -27,6 +27,12 @@ The release hardening regression suite additionally verifies explicit zero fusio
 
 ## Scientific interpretation
 
+## Open Molecule Lab local-run verification (2026-07-23)
+
+The source-only API contract passed CSV BOM/duplicate/blank/oversize cases and verified that a run without an external asset root becomes `blocked` without creating `scores.csv`. The frontend TypeScript/Vite build passed. With the local Python 3.11 environment, the companion offline asset manifest (18 files), and explicit smina/obabel paths, `real-run-check` completed a two-row `library` run: `2` input rows, `2` ranked rows, `0` failed rows, and `layer1_status` through `layer4_status` equal to `ok` for both rows. The run manifest was rechecked after result summary creation, and public bundle files were checked for source-root, asset-root and run-root path leakage.
+
+This is an engineering integration check, not a new scientific benchmark or efficacy validation. The two molecules are a smoke fixture; no performance claim is inferred from their scores.
+
 The strict labeled tier contains 167 targets. L2 AUC median is 0.870833 and four-level AUC median is 0.850694. Top-1% recall medians are both 0; means are 0.019064 (L2) and 0.040870 (four-level). These are pair-heldout measurements with an unlabeled background, not confirmed-negative or cold-start estimates.
 
 Only CHEMBL2051 has a registered receptor. Its L2 top-300 docking produced 157 `ok`, 82 `skipped_hac`, 39 `dock_timeout`, 21 `dock_no_score`, and 1 `prep_timeout`. Fusion AUC was 0.844444, equal to the pre-docking L2 AUC. The historical 0.935 value is not a generalization claim for this run.
